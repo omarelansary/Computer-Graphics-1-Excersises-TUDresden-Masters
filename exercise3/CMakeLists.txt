@@ -1,6 +1,6 @@
 include_directories( ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include )
 
-add_executable(Exercise2 MACOSX_BUNDLE
+add_executable(Exercise3 MACOSX_BUNDLE
 	src/main.cpp
 	src/Viewer.cpp include/Viewer.h
 	src/Primitives.cpp include/Primitives.h
@@ -11,4 +11,4 @@ add_executable(Exercise2 MACOSX_BUNDLE
 	src/Stripification.cpp include/Stripification.h
 	include/sample_set.h)
 
-target_link_libraries(Exercise2 CG1Common ${LIBS})
+target_link_libraries(Exercise3 CG1Common ${LIBS})
