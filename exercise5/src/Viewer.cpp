@@ -21,7 +21,7 @@
 #include <gui/ShaderPool.h>
 
 Viewer::Viewer()
-	: AbstractViewer("CG1 Exercise 4"),
+	: AbstractViewer("CG1 Exercise 5"),
 	renderer(polymesh),
 	corrPositions(nse::gui::VertexBuffer)
 { 
