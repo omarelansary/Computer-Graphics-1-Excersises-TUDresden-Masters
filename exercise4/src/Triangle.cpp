@@ -28,7 +28,7 @@ Triangle::Triangle(const HEMesh&m, const OpenMesh::FaceHandle& f):h(f)
 //returns the smallest axis aligned bounding box of the triangle
 Box Triangle::ComputeBounds() const
 {
-	/* Task 3.2.2 */
+	/* Task 4.2.2 */
 	Box b;		
 	return b;
 }
@@ -37,7 +37,7 @@ Box Triangle::ComputeBounds() const
 //returns true if the triangle overlaps the given box b
 bool Triangle::Overlaps(const Box& b) const
 {
-	/* Task 3.2.2 */
+	/* Task 4.2.2 */
 	//carefully look at the interface of the box class, there might be a lot of useful helper functions
 	return true;	
 }

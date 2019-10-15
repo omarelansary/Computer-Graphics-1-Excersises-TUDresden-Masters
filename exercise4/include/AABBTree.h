@@ -49,7 +49,7 @@ public:
 		virtual int NumPrimitives() const = 0;
 		
 
-		//this method must be implemented to return true for a leaf node and false for a non_lef node
+		//this method must be implemented to return true for a leaf node and false for a non-leaf node
 		virtual bool IsLeaf() const = 0;
 		//virtual destructor
 		virtual ~AABBNode() {}
@@ -397,7 +397,7 @@ public:
 		assert(IsCompleted());
 		if(root == nullptr)
 			return ResultEntry();
-		/* Task 3.2.1 */
+		/* Task 4.2.1 */
 		return ClosestPrimitiveLinearSearch(q);	
 	}
 

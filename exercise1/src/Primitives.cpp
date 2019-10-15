@@ -19,7 +19,7 @@ void CreateQuad(HEMesh& mesh)
 void CreateCube(HEMesh& mesh)
 {
 	mesh.clear();
-	/* Task 2.2.1 */
+	/* Task 1.2.1 */
 }
 
 void CreateTetrahedron(HEMesh& mesh, float a)

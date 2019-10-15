@@ -9,7 +9,7 @@
 float ComputeVolume(const HEMesh& m)
 {
 	float vol = 0;
-	/*Task 2.2.2*/
+	/*Task 1.2.2*/
 	std::cout << "Volume calculation is not implemented." << std::endl;
 	return vol;
 }

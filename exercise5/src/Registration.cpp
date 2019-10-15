@@ -12,7 +12,7 @@ Eigen::Affine3f CalculateRigidRegistration(std::vector<correspondence>& correspo
 	if(correspondences.size() < 3)
 		return T;	
 	
-	/* Task 4.2.2 */
+	/* Task 5.2.2 */
 
 	return T;
 }

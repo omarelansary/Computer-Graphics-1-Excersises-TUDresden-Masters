@@ -12,6 +12,6 @@ unsigned int ExtractShells(HEMesh& m, OpenMesh::FPropHandleT<int> perFaceShellIn
 	for (auto f : m.faces())
 		m.property(perFaceShellIndex, f) = -1;
 
-	/*Task 2.2.3*/
+	/*Task 1.2.3*/
 	return 0;
 }

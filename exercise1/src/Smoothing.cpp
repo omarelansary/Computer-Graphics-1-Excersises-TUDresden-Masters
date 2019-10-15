@@ -8,7 +8,7 @@
 
 void SmoothUniformLaplacian(HEMesh& m, float lambda, unsigned int iterations)
 {
-	/*Task 2.2.4*/
+	/*Task 1.2.4*/
 }
 
 void AddNoise(HEMesh& m)

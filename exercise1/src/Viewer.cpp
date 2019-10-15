@@ -5,180 +5,251 @@
 #include "Viewer.h"
 
 #include <nanogui/window.h>
-#include <nanogui/layout.h>
+#include <nanogui/button.h>
 #include <nanogui/checkbox.h>
-
-#include <gui/SliderHelper.h>
+#include <nanogui/messagedialog.h>
+#include <nanogui/popupbutton.h>
+#include <nanogui/layout.h>
+#include <nanogui/combobox.h>
 
 #include <iostream>
 
-#include "glsl.h"
+#include <OpenMesh/Core/IO/MeshIO.hh>
+
+#include <gui/SliderHelper.h>
+
+#include "Primitives.h"
+#include "SurfaceArea.h"
+#include "Volume.h"
+#include "ShellExtraction.h"
+#include "Smoothing.h"
+#include "Stripification.h"
+
+const int segmentColorCount = 12;
+const float segmentColors[segmentColorCount][3] =
+{
+	{ 0.651f, 0.808f, 0.890f },
+	{ 0.122f, 0.471f, 0.706f },
+	{ 0.698f, 0.875f, 0.541f },
+	{ 0.200f, 0.627f, 0.173f },
+	{ 0.984f, 0.604f, 0.600f },
+	{ 0.890f, 0.102f, 0.110f },
+	{ 0.992f, 0.749f, 0.435f },
+	{ 1.000f, 0.498f, 0.000f },
+	{ 0.792f, 0.698f, 0.839f },
+	{ 0.416f, 0.239f, 0.604f },
+	{ 1.000f, 1.000f, 0.600f },
+	{ 0.694f, 0.349f, 0.157f },
+
+};
 
 Viewer::Viewer()
-	: AbstractViewer("CG1 Exercise 1")
+	: AbstractViewer("CG1 Exercise 1"),
+	renderer(polymesh)
 { 
-	SetupGUI();
+	SetupGUI();	
 
-	CreateShaders();
-	CreateVertexBuffers();
-
-	modelViewMatrix.setIdentity();
-	projectionMatrix.setIdentity();
-
-	camera().FocusOnBBox(nse::math::BoundingBox<float, 3>(Eigen::Vector3f(-1, -1, -1), Eigen::Vector3f(1, 1, 1)));
+	polymesh.add_property(faceIdProperty);
+	polymesh.add_property(faceColorProperty);
 }
 
 void Viewer::SetupGUI()
 {
-	auto mainWindow = SetupMainWindow();
+	auto mainWindow = SetupMainWindow();	
 
-	//Create GUI elements for the various options
-	chkHasDepthTesting = new nanogui::CheckBox(mainWindow, "Perform Depth Testing");
-	chkHasDepthTesting->setChecked(true);
+	auto loadFileBtn = new nanogui::Button(mainWindow, "Load Mesh");
+	loadFileBtn->setCallback([this]() {
+		std::vector<std::pair<std::string, std::string>> fileTypes;
+		fileTypes.push_back(std::make_pair("obj", "OBJ File"));
+		auto file = nanogui::file_dialog(fileTypes, false);
+		if (!file.empty())
+		{
+			polymesh.clear();
+			if (!OpenMesh::IO::read_mesh(polymesh, file))
+			{
+				new nanogui::MessageDialog(this, nanogui::MessageDialog::Type::Warning, "Load Mesh",
+					"The specified file could not be loaded");
+			}
+			else
+				MeshUpdated(true);
+		}
+	});
 
-	chkHasFaceCulling = new nanogui::CheckBox(mainWindow, "Perform backface Culling");
-	chkHasFaceCulling->setChecked(true);
+	auto primitiveBtn = new nanogui::PopupButton(mainWindow, "Create Primitive");
+	primitiveBtn->popup()->setLayout(new nanogui::BoxLayout(nanogui::Orientation::Vertical, nanogui::Alignment::Fill, 4, 4));
 
-	sldJuliaCX = nse::gui::AddLabeledSliderWithDefaultDisplay(mainWindow, "JuliaC.X", std::make_pair(-1.0f, 1.0f), 0.45f, 2);
-	sldJuliaCY = nse::gui::AddLabeledSliderWithDefaultDisplay(mainWindow, "JuliaC.Y", std::make_pair(-1.0f, 1.0f), -0.3f, 2);
-	sldJuliaZoom = nse::gui::AddLabeledSliderWithDefaultDisplay(mainWindow, "Julia Zoom", std::make_pair(0.01f, 10.0f), 1.0f, 2);
+	auto quadBtn = new nanogui::Button(primitiveBtn->popup(), "Quad");
+	quadBtn->setCallback([this]() { CreateQuad(polymesh); MeshUpdated(true); });
+
+	auto diskBtn = new nanogui::Button(primitiveBtn->popup(), "Disk");
+	diskBtn->setCallback([this]() { CreateDisk(polymesh, 1, 20); MeshUpdated(true); });
+
+	auto tetBtn = new nanogui::Button(primitiveBtn->popup(), "Tetrahedron");
+	tetBtn->setCallback([this]() { CreateTetrahedron(polymesh); MeshUpdated(true); });
+
+	auto octaBtn = new nanogui::Button(primitiveBtn->popup(), "Octahedron");
+	octaBtn->setCallback([this]() { CreateOctahedron(polymesh, 1); MeshUpdated(true); });
+
+	auto cubeBtn = new nanogui::Button(primitiveBtn->popup(), "Cube");
+	cubeBtn->setCallback([this]() { CreateCube(polymesh); MeshUpdated(true); });
+
+	auto icoBtn = new nanogui::Button(primitiveBtn->popup(), "Icosahedron");
+	icoBtn->setCallback([this]() { CreateIcosahedron(polymesh, 1); MeshUpdated(true); });
+
+	auto cylBtn = new nanogui::Button(primitiveBtn->popup(), "Cylinder");
+	cylBtn->setCallback([this]() { CreateCylinder(polymesh, 0.3f, 1, 20, 10); MeshUpdated(true); });
+
+	auto sphereBtn = new nanogui::Button(primitiveBtn->popup(), "Sphere");
+	sphereBtn->setCallback([this]() { CreateSphere(polymesh, 1, 20, 20); MeshUpdated(true); });
+
+	auto torusBtn = new nanogui::Button(primitiveBtn->popup(), "Torus");
+	torusBtn->setCallback([this]() { CreateTorus(polymesh, 0.4f, 1, 20, 20); MeshUpdated(true); });
+
+	auto arrowBtn = new nanogui::Button(primitiveBtn->popup(), "Arrow");
+	arrowBtn->setCallback([this]() { CreateUnitArrow(polymesh); MeshUpdated(true); });
+
+	auto calcAreaBtn = new nanogui::Button(mainWindow, "Calculate Mesh Area");
+	calcAreaBtn->setCallback([this]() {
+		auto area = ComputeSurfaceArea(polymesh);
+		std::stringstream ss;
+		ss << "The mesh has an area of " << area << ".";
+		new nanogui::MessageDialog(this, nanogui::MessageDialog::Type::Information, "Surface Area",
+			ss.str());
+	});
+
+	auto calcVolBtn = new nanogui::Button(mainWindow, "Calculate Mesh Volume");
+	calcVolBtn->setCallback([this]() {
+		//Triangulate the mesh if it is not a triangle mesh
+		for (auto f : polymesh.faces())
+		{
+			if (polymesh.valence(f) > 3)
+			{
+				std::cout << "Triangulating mesh." << std::endl;
+				polymesh.triangulate();
+				MeshUpdated();
+				break;
+			}
+		}
+		
+		auto vol = ComputeVolume(polymesh);
+		std::stringstream ss;
+		ss << "The mesh has a volume of " << vol << ".";
+		new nanogui::MessageDialog(this, nanogui::MessageDialog::Type::Information, "Volume",
+			ss.str());
+	});
+
+	auto extractShellsBtn = new nanogui::Button(mainWindow, "Extract Shells");
+	extractShellsBtn->setCallback([this]() {
+		auto count = ExtractShells(polymesh, faceIdProperty);
+		std::stringstream ss;
+		ss << "The mesh has " << count << " shells.";
+		new nanogui::MessageDialog(this, nanogui::MessageDialog::Type::Information, "Shell Extraction",
+			ss.str());
+
+		ColorMeshFromIds();
+	});
+
+	auto noiseBtn = new nanogui::Button(mainWindow, "Add Noise");
+	noiseBtn->setCallback([this]() { AddNoise(polymesh); MeshUpdated(); });
+
+	nanogui::TextBox* txtSmoothingIterations;
+	auto sldSmoothingIterations = nse::gui::AddLabeledSlider(mainWindow, "Smoothing Iterations", std::make_pair(1, 100), 20, txtSmoothingIterations);
+	sldSmoothingIterations->setCallback([this, txtSmoothingIterations](float value)
+	{
+		smoothingIterations = (unsigned int)std::round(value);
+		txtSmoothingIterations->setValue(std::to_string(smoothingIterations));
+	});
+	sldSmoothingIterations->callback()(sldSmoothingIterations->value());
+
+	sldSmoothingStrength = nse::gui::AddLabeledSliderWithDefaultDisplay(mainWindow, "Smoothing Strength", std::make_pair(0.0f, 1.0f), 0.1f, 2);
+
+	
+	auto smoothBtn = new nanogui::Button(mainWindow, "Laplacian Smoothing");
+	smoothBtn->setCallback([this]() {
+		SmoothUniformLaplacian(polymesh, sldSmoothingStrength->value(), smoothingIterations);
+		MeshUpdated();
+	});
+
+	nanogui::TextBox* txtStripificationTrials;
+	auto sldStripificationTrials = nse::gui::AddLabeledSlider(mainWindow, "Stripification Trials", std::make_pair(1, 50), 20, txtStripificationTrials);
+	sldStripificationTrials->setCallback([this, txtStripificationTrials](float value)
+	{
+		stripificationTrials = (unsigned int)std::round(value);
+		txtStripificationTrials->setValue(std::to_string(stripificationTrials));
+	});
+	sldStripificationTrials->callback()(sldStripificationTrials->value());
+
+	auto stripifyBtn = new nanogui::Button(mainWindow, "Extract Triangle Strips");
+	stripifyBtn->setCallback([this]() {
+		//Triangulate the mesh if it is not a triangle mesh
+		for (auto f : polymesh.faces())
+		{
+			if (polymesh.valence(f) > 3)
+			{
+				std::cout << "Triangulating mesh." << std::endl;
+				polymesh.triangulate();
+				MeshUpdated();
+				break;
+			}
+		}
+
+		auto count = ExtractTriStrips(polymesh, faceIdProperty, stripificationTrials);
+		std::stringstream ss;
+		ss << "The mesh has " << count << " triangle strips.";
+		new nanogui::MessageDialog(this, nanogui::MessageDialog::Type::Information, "Shell Extraction",
+			ss.str());
+
+		ColorMeshFromIds();
+	});
+
+	shadingBtn = new nanogui::ComboBox(mainWindow, { "Smooth Shading", "Flat Shading" });
 
 	performLayout();
 }
 
-// Create and define the vertex array and add a number of vertex buffers
-void Viewer::CreateVertexBuffers()
+void Viewer::ColorMeshFromIds()
 {
-	/*** Begin of task 1.2.3 ***
-	Fill the positions-array and your color array with 12 rows, each
-	containing 4 entries, to define a tetrahedron. */
-
-	// Define 3 vertices for one face
-	GLfloat positions[] = {
-		0, 1, 0, 1,
-		-1, -1, 0, 1,
-		1, -1, 0, 1
-	};
-
-	
-
-	
-
-	// Generate the vertex array 
-	glGenVertexArrays(1, &vertex_array_id);
-	glBindVertexArray(vertex_array_id);
-
-	// Generate a position buffer to be appended to the vertex array
-	glGenBuffers(1, &position_buffer_id);
-	// Bind the buffer for subsequent settings
-	glBindBuffer(GL_ARRAY_BUFFER, position_buffer_id);
-	// Supply the position data
-	glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
-	// The buffer shall now be linked to the shader attribute
-	// "in_position". First, get the location of this attribute in 
-	// the shader program
-	GLuint vid = glGetAttribLocation(program_id, "in_position");
-	
-	// Enable this vertex attribute array
-	glEnableVertexAttribArray(vid);
-	// Set the format of the data to match the type of "in_position"
-	glVertexAttribPointer(vid, 4, GL_FLOAT, GL_FALSE, 0, 0);
-
-	/*** Begin of task 1.2.2 (a) ***
-	Create another buffer that will store color information. This works nearly
-	similar to the code above that creates the position buffer. Store the buffer
-	id into the variable "color_buffer_id" and bind the color buffer to the
-	shader variable "in_color".
-
-
-	/*** End of task 1.2.2 (a) ***/
-	
-	
-
-	// Unbind the vertex array to leave OpenGL in a clean state
-	glBindVertexArray(0);
-}
-
-//Checks if the given shader has been compiled successfully. Otherwise, prints an
-//error message and throws an exception.
-//  shaderId - the id of the shader object
-//  name - a human readable name for the shader that is printed together with the error
-void CheckShaderCompileStatus(GLuint shaderId, std::string name)
-{
-	GLint status;
-	glGetShaderiv(shaderId, GL_COMPILE_STATUS, &status);
-
-	if (status != GL_TRUE)
+	//Set face colors
+	for (auto f : polymesh.faces())
 	{
-		char buffer[512];
-		std::cerr << "Error while compiling shader \"" << name << "\":" << std::endl;
-		glGetShaderInfoLog(shaderId, 512, nullptr, buffer);
-		std::cerr << "Error: " << std::endl << buffer << std::endl;
-		throw std::runtime_error("Shader compilation failed!");
+		auto shell = polymesh.property(faceIdProperty, f);
+		if (shell < 0)
+			polymesh.property(faceColorProperty, f) = Eigen::Vector4f(0, 0, 0, 1);
+		else
+		{
+			auto& color = segmentColors[shell % segmentColorCount];
+			polymesh.property(faceColorProperty, f) = Eigen::Vector4f(color[0], color[1], color[2], 1);
+		}
 	}
+	hasColors = true;
+	MeshUpdated();
 }
 
-// Read, Compile and link the shader codes to a shader program
-void Viewer::CreateShaders()
+void Viewer::MeshUpdated(bool initNewMesh)
 {
-	std::string vs((char*)shader_vert, shader_vert_size);
-	const char *vertex_content = vs.c_str();
+	if (initNewMesh)
+	{
+		hasColors = false;
 
-	std::string fs((char*)shader_frag, shader_frag_size);
-	const char *fragment_content = fs.c_str();
+		//calculate the bounding box of the mesh
+		nse::math::BoundingBox<float, 3> bbox;
+		for (auto v : polymesh.vertices())
+			bbox.expand(ToEigenVector(polymesh.point(v)));
+		camera().FocusOnBBox(bbox);
+	}	
 
-	/*** Begin of task 1.2.1 ***
-	Use the appropriate OpenGL commands to create a shader object for
-	the vertex shader, set the source code and let it compile. Store the
-	ID of this shader object in the variable "vertex_shader_id". Repeat
-	for the fragment shader. Store the ID in the variable "fragment_shader_id.
-	Finally, create a shader program with its handle stored in "program_id",
-	attach both shader objects and link them. For error checking, you can
-	use the method "CheckShaderCompileStatus()" after the call to glCompileShader().
-	*/
-	/*** End of task 1.2.1 ***/
+	if (hasColors)
+		renderer.UpdateWithPerFaceColor(faceColorProperty);
+	else
+		renderer.Update();
 }
 
 void Viewer::drawContents()
 {
-	Eigen::Vector2f juliaC(sldJuliaCX->value(), sldJuliaCY->value());
-	float juliaZoom = sldJuliaZoom->value();
+	glEnable(GL_DEPTH_TEST);
 
-	//Get the transform matrices
-	camera().ComputeCameraMatrices(modelViewMatrix, projectionMatrix);
+	Eigen::Matrix4f view, proj;
+	camera().ComputeCameraMatrices(view, proj);
 
-	// If has_faceculling is set then enable backface culling
-	// and disable it otherwise
-	if (chkHasFaceCulling->checked())
-		glEnable(GL_CULL_FACE);
-	else
-		glDisable(GL_CULL_FACE);
-
-	// If has_depthtesting is set then enable depth testing
-	// and disable it otherwise
-	if (chkHasDepthTesting->checked())
-		glEnable(GL_DEPTH_TEST);
-	else
-		glDisable(GL_DEPTH_TEST);
-
-	// Activate the shader program
-	glUseProgram(program_id);
-
-	/*** Begin of task 1.2.4 (b) ***
-	Set the shader variables for the modelview and projection matrix.
-	First, find the location of these variables using glGetUniformLocation and
-	then set them with the command glUniformMatrix4fv. 
-	*/
-
-	// Bind the vertex array 
-	glBindVertexArray(vertex_array_id);
-	// Draw the bound vertex array. Start at element 0 and draw 3 vertices
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-
-	/*** End of task 1.2.4 (b) ***/
-	
-	// Unbind the vertex array
-	glBindVertexArray(0);
-	// Deactivate the shader program
-	glUseProgram(0);
+	renderer.Render(view, proj, shadingBtn->selectedIndex() == 1);
 }

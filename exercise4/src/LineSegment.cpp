@@ -96,7 +96,7 @@ bool LineSegment::Overlaps(const Box& b) const
 Eigen::Vector3f LineSegment::ClosestPoint(const Eigen::Vector3f& p) const
 {
 	//the two endpoints of the line segment are v0,v1
-	/* Task 3.2.1 */
+	/* Task 4.2.1 */
 	return Eigen::Vector3f(0,0,0);
 }
 

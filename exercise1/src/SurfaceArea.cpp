@@ -9,7 +9,7 @@
 float ComputeSurfaceArea(const HEMesh& m)
 {
 	float area = 0;
-	/* Task 2.2.2 */
+	/* Task 1.2.2 */
 	std::cout << "Area computation is not implemented." << std::endl;
 	return area;
 }

@@ -5,38 +5,38 @@
 #pragma once
 
 #include <gui/AbstractViewer.h>
-#include <gui/GLShader.h>
-#include <gui/GLBuffer.h>
-#include <gui/GLVertexArray.h>
 
 class Viewer : public nse::gui::AbstractViewer
 {
 public:
 	Viewer();
 
-	void LoadShaders();
-	void CreateGeometry();
+	void drawContents();
 
-	void drawContents();	
-	bool resizeEvent(const Eigen::Vector2i&);
+private:
+	void SetupGUI();
 
-private:	
+	Eigen::Matrix4f modelViewMatrix, projectionMatrix;
 
-	void RenderSky();
+	//GUI Elements for the various options
+	nanogui::CheckBox* chkHasFaceCulling;	//Shall back face culling be activated?
+	nanogui::CheckBox* chkHasDepthTesting;	//Shall depth testing be activated?
 
-	Eigen::Matrix4f view, proj;
+	nanogui::Slider* sldJuliaCX;	//Seed for the Julia fractal
+	nanogui::Slider* sldJuliaCY;
+	nanogui::Slider* sldJuliaZoom;	//Zoom factor for the Julia fractal
 
-	nse::gui::GLShader skyShader;
-	nse::gui::GLVertexArray emptyVAO;
+	// The following variables hold OpenGL object IDs
+	GLuint vertex_shader_id,	// ID of the vertex shader
+		fragment_shader_id,	// ID of the fragment shader
+		program_id,			// ID of the shader program
+		vertex_array_id,		// ID of the vertex array
+		position_buffer_id,	// ID of the position buffer
+		color_buffer_id,		// ID of the color buffer
+		uv_map_buffer_id;	// ID of the uv_map
 
-	nse::gui::GLShader terrainShader;
-	nse::gui::GLVertexArray terrainVAO;
-	nse::gui::GLBuffer terrainPositions;
-	nse::gui::GLBuffer terrainIndices;
-
-	GLuint grassTexture, rockTexture, roadColorTexture, roadNormalMap, roadSpecularMap, alphaMap;
-
-	nse::gui::GLBuffer offsetBuffer;
-
-	GLuint backgroundFBO, backgroundTexture;
+							// Read, Compile and link the shader codes to a shader program
+	void CreateShaders();
+	// Create and define the vertex array and add a number of vertex buffers
+	void CreateVertexBuffers();
 };

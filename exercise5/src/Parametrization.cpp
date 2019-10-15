@@ -81,7 +81,7 @@ bool ComputeParametrizationOfTopologicalDisk(HEMesh& mesh)
 		return false;
 	}
 	
-	/* Task 4.2.1 */
+	/* Task 5.2.1 */
 
 	return true;
 }
