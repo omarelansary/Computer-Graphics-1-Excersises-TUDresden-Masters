@@ -1,7 +1,7 @@
-﻿// This source code is property of the Computer Graphics and Visualization 
+#version 130
+// This source code is property of the Computer Graphics and Visualization 
 // chair of the TU Dresden. Do not distribute! 
 // Copyright (C) CGV TU Dresden - All Rights Reserved
-#version 130
 
 in vec4 fragment_color;
 
