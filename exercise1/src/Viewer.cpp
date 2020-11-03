@@ -1,4 +1,4 @@
-﻿// This source code is property of the Computer Graphics and Visualization 
+// This source code is property of the Computer Graphics and Visualization 
 // chair of the TU Dresden. Do not distribute! 
 // Copyright (C) CGV TU Dresden - All Rights Reserved
 
@@ -196,7 +196,7 @@ void Viewer::SetupGUI()
 		auto count = ExtractTriStrips(polymesh, faceIdProperty, stripificationTrials);
 		std::stringstream ss;
 		ss << "The mesh has " << count << " triangle strips.";
-		new nanogui::MessageDialog(this, nanogui::MessageDialog::Type::Information, "Shell Extraction",
+		new nanogui::MessageDialog(this, nanogui::MessageDialog::Type::Information, "Stripification",
 			ss.str());
 
 		ColorMeshFromIds();
