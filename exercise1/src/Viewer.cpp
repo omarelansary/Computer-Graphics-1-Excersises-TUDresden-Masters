@@ -1,4 +1,4 @@
-// This source code is property of the Computer Graphics and Visualization 
+﻿// This source code is property of the Computer Graphics and Visualization 
 // chair of the TU Dresden. Do not distribute! 
 // Copyright (C) CGV TU Dresden - All Rights Reserved
 
@@ -49,6 +49,7 @@ Viewer::Viewer()
 { 
 	SetupGUI();	
 
+	polymesh.add_property(bbox_prop, "bbox");
 	polymesh.add_property(faceIdProperty);
 	polymesh.add_property(faceColorProperty);
 }
@@ -150,7 +151,7 @@ void Viewer::SetupGUI()
 	});
 
 	auto noiseBtn = new nanogui::Button(mainWindow, "Add Noise");
-	noiseBtn->setCallback([this]() { AddNoise(polymesh); MeshUpdated(); });
+	noiseBtn->setCallback([this]() { AddNoise(polymesh, bbox_prop); MeshUpdated(); });
 
 	nanogui::TextBox* txtSmoothingIterations;
 	auto sldSmoothingIterations = nse::gui::AddLabeledSlider(mainWindow, "Smoothing Iterations", std::make_pair(1, 100), 20, txtSmoothingIterations);
@@ -235,6 +236,7 @@ void Viewer::MeshUpdated(bool initNewMesh)
 		nse::math::BoundingBox<float, 3> bbox;
 		for (auto v : polymesh.vertices())
 			bbox.expand(ToEigenVector(polymesh.point(v)));
+		polymesh.property(bbox_prop) = bbox;
 		camera().FocusOnBBox(bbox);
 	}	
 

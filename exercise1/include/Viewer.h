@@ -10,6 +10,8 @@
 class Viewer : public nse::gui::AbstractViewer
 {
 public:
+	typedef nse::math::BoundingBox<float, 3> BBoxType;
+
 	Viewer();
 
 	void drawContents();
@@ -29,6 +31,7 @@ private:
 
 	HEMesh polymesh;
 	MeshRenderer renderer;
+	OpenMesh::MPropHandleT<BBoxType> bbox_prop;
 
 	OpenMesh::FPropHandleT<int> faceIdProperty;
 	OpenMesh::FPropHandleT<Eigen::Vector4f> faceColorProperty;

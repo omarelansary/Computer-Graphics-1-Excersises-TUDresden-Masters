@@ -11,7 +11,7 @@ void SmoothUniformLaplacian(HEMesh& m, float lambda, unsigned int iterations)
 	/*Task 1.2.4*/
 }
 
-void AddNoise(HEMesh& m)
+void AddNoise(HEMesh& m, OpenMesh::MPropHandleT<Viewer::BBoxType> bbox_prop)
 {
 	std::mt19937 rnd;
 	std::normal_distribution<float> dist;
@@ -19,11 +19,17 @@ void AddNoise(HEMesh& m)
 	for (auto v : m.vertices())
 	{
 		OpenMesh::Vec3f n;
-		m.calc_vertex_normal_correct(v, n); //normal scales with area
-		float areaScale = n.norm();
-		float lengthScale = sqrt(areaScale);
-		n = lengthScale / areaScale * n;
+		m.calc_vertex_normal_correct(v, n);
+		const auto diag = m.property(bbox_prop).diagonal();
+		const float base_diag = std::min(diag.x(), std::min(diag.y(), diag.z())) / 20.f;
+		float base_nb=0, nb_num=0;
+		for (auto vnb : m.vv_range(v))
+		{
+			base_nb += (m.point(v) - m.point(vnb)).norm();
+			nb_num++;
+		}
+		base_nb /= 4.f * nb_num;
 
-		m.point(v) += 0.1f * dist(rnd) * n;
+		m.point(v) += std::min(base_diag, base_nb) * dist(rnd) * n.normalized();
 	}
 }
