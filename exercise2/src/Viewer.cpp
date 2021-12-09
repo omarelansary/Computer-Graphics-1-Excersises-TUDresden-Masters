@@ -17,7 +17,7 @@
 #include "glsl.h"
 
 Viewer::Viewer()
-	: AbstractViewer("CG1 Exercise 2")
+	: AbstractViewer("CG1 Exercise 2"), vertex_shader_id(0), fragment_shader_id(0), program_id(0)
 { 
 	SetupGUI();
 
