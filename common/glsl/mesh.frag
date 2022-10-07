@@ -20,7 +20,7 @@ void main()
 		normal = normalize(cross(dFdx(posViewSpace.xyz), dFdy(posViewSpace.xyz)));
 	vec3 toLight = normalize(-posViewSpace.xyz);
 	
-	float diffuse = abs(dot(normal, toLight));	
+	float diffuse = max(dot(normal, toLight), 0);
 	float specular = pow(diffuse, 20);
 	
 	if(!gl_FrontFacing)

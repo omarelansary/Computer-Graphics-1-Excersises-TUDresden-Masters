@@ -63,7 +63,7 @@ std::string FormatDebugOutput(GLenum source, GLenum type, GLuint id, GLenum seve
 		typeString = "Undefined Behavior";
 		break;
 	}
-	case GL_DEBUG_TYPE_PORTABILITY_ARB: {
+	case GL_DEBUG_TYPE_PORTABILITY: {
 		typeString = "Portability";
 		break;
 	}
