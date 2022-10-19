@@ -5,86 +5,38 @@
 #pragma once
 
 #include <gui/AbstractViewer.h>
-#include <gui/SliderHelper.h>
-#include <util/OpenMeshUtils.h>
-
-#include "AABBTree.h"
-#include "HashGrid.h"
-#include "Point.h"
-#include "LineSegment.h"
-#include "Triangle.h"
-
-#include <gui/ShaderPool.h>
+#include <gui/GLShader.h>
+#include <gui/GLBuffer.h>
+#include <gui/GLVertexArray.h>
 
 class Viewer : public nse::gui::AbstractViewer
 {
 public:
 	Viewer();
 
-	void drawContents();
+	void LoadShaders();
+	void CreateGeometry();
 
-private:
+	void drawContents();	
+	bool resizeEvent(const Eigen::Vector2i&);
 
-	enum PrimitiveType
-	{
-		Vertex, Edge, Tri
-	};
+private:	
 
-	void SetupGUI();
-	void MeshUpdated();
+	void RenderSky();
 
-	void FindClosestPoint(const Eigen::Vector3f& p);
-	void BuildGridVBO();
-	void BuildRayVBOs();
+	Eigen::Matrix4f view, proj;
 
-	template <typename Grid>
-	void BuildGridVBO(const Grid& grid)
-	{
-		std::vector<Eigen::Vector4f> positions;
-		for (auto it = grid.NonEmptyCellsBegin(); it != grid.NonEmptyCellsEnd(); ++it)
-		{
-			auto box = grid.CellBounds(it->first);
-			AddBoxVertices(box, positions);
-		}
+	nse::gui::GLShader skyShader;
+	nse::gui::GLVertexArray emptyVAO;
 
-		ShaderPool::Instance()->simpleShader.bind();
-		gridVAO.bind();
-		gridPositions.uploadData(positions).bindToAttribute("position");
-		gridVAO.unbind();
-		gridIndices = (GLuint)positions.size();
-	}
+	nse::gui::GLShader terrainShader;
+	nse::gui::GLVertexArray terrainVAO;
+	nse::gui::GLBuffer terrainPositions;
+	nse::gui::GLBuffer terrainIndices;
 
-	void AddBoxVertices(const Box& box, std::vector<Eigen::Vector4f>& positions);
+	GLuint grassTexture, rockTexture, roadColorTexture, roadNormalMap, roadSpecularMap, alphaMap;
 
-	nanogui::ComboBox* shadingBtn;
-	nanogui::CheckBox* chkRenderMesh;
-	nanogui::CheckBox* chkRenderGrid;
-	nanogui::CheckBox* chkRenderRay;
-	int raySteps;
+	nse::gui::GLBuffer offsetBuffer;
 
-	nse::gui::VectorInput* sldQuery, *sldRayOrigin, *sldRayDir;
-	nanogui::ComboBox* cmbPrimitiveType;
-	
-	HEMesh polymesh;
-	float bboxMaxLength;
-	MeshRenderer renderer;
-	
-	AABBTree<Point> vertexTree;
-	AABBTree<LineSegment> edgeTree;
-	AABBTree<Triangle> triangleTree;
-	
-	HashGrid<Point> vertexGrid;
-	HashGrid<LineSegment> edgeGrid;
-	HashGrid<Triangle> triangleGrid;
-
-	nse::gui::GLBuffer closestPositions;
-	nse::gui::GLVertexArray closestVAO;
-
-	nse::gui::GLBuffer gridPositions;
-	nse::gui::GLVertexArray gridVAO;
-	GLuint gridIndices;
-
-	nse::gui::GLBuffer rayPositions, rayCellsPositions;
-	nse::gui::GLVertexArray rayVAO, rayCellsVAO;
-	GLuint rayCellsIndices;
+	GLuint backgroundFBO, backgroundTexture;
 };

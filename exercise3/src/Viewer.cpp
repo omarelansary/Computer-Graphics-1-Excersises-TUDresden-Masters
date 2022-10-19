@@ -12,175 +12,175 @@
 
 #include <iostream>
 
-#include <stb_image.h>
+#include <OpenMesh/Core/IO/MeshIO.hh>
 
 #include "glsl.h"
-#include "textures.h"
-
-const uint32_t PATCH_SIZE = 256; //number of vertices along one side of the terrain patch
 
 Viewer::Viewer()
-	: AbstractViewer("CG1 Exercise 3"),
-	terrainPositions(nse::gui::VertexBuffer), terrainIndices(nse::gui::IndexBuffer),
-	offsetBuffer(nse::gui::VertexBuffer)
-{
-	LoadShaders();
-	CreateGeometry();
-	
-	//Create a texture and framebuffer for the background
-	glGenFramebuffers(1, &backgroundFBO);	
-	glGenTextures(1, &backgroundTexture);	
+	: AbstractViewer("CG1 Exercise 2"), vertex_shader_id(0), fragment_shader_id(0), program_id(0)
+{ 
+	SetupGUI();
 
-	//Align camera to view a reasonable part of the terrain
-	camera().SetSceneExtent(nse::math::BoundingBox<float, 3>(Eigen::Vector3f(0, 0, 0), Eigen::Vector3f(PATCH_SIZE - 1, 0, PATCH_SIZE - 1)));
-	camera().FocusOnPoint(0.5f * Eigen::Vector3f(PATCH_SIZE - 1, 15, PATCH_SIZE - 1));	
-	camera().Zoom(-30);
-	camera().RotateAroundFocusPointLocal(Eigen::AngleAxisf(-0.5f, Eigen::Vector3f::UnitY()) * Eigen::AngleAxisf(-0.05f, Eigen::Vector3f::UnitX()));
-	camera().FixClippingPlanes(0.1f, 1000.f);
+	CreateShaders();
+	CreateVertexBuffers();
+
+	modelViewMatrix.setIdentity();
+	projectionMatrix.setIdentity();
+
+	camera().FocusOnBBox(nse::math::BoundingBox<float, 3>(Eigen::Vector3f(-1, -1, -1), Eigen::Vector3f(1, 1, 1)));
 }
 
-bool Viewer::resizeEvent(const Eigen::Vector2i&)
+void Viewer::SetupGUI()
 {
-	//Re-generate the texture and FBO for the background
-	glBindFramebuffer(GL_FRAMEBUFFER, backgroundFBO);
-	glBindTexture(GL_TEXTURE_2D, backgroundTexture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width(), height(), 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, backgroundTexture, 0);
-	auto fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (fboStatus != GL_FRAMEBUFFER_COMPLETE)
-		std::cout << "Warning: Background framebuffer is not complete: " << fboStatus << std::endl;
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	auto mainWindow = SetupMainWindow();
 
-	return false;
+	//Create GUI elements for the various options
+	chkHasDepthTesting = new nanogui::CheckBox(mainWindow, "Perform Depth Testing");
+	chkHasDepthTesting->setChecked(true);
+
+	chkHasFaceCulling = new nanogui::CheckBox(mainWindow, "Perform backface Culling");
+	chkHasFaceCulling->setChecked(true);
+
+	sldJuliaCX = nse::gui::AddLabeledSliderWithDefaultDisplay(mainWindow, "JuliaC.X", std::make_pair(-1.0f, 1.0f), 0.45f, 2);
+	sldJuliaCY = nse::gui::AddLabeledSliderWithDefaultDisplay(mainWindow, "JuliaC.Y", std::make_pair(-1.0f, 1.0f), -0.3f, 2);
+	sldJuliaZoom = nse::gui::AddLabeledSliderWithDefaultDisplay(mainWindow, "Julia Zoom", std::make_pair(0.01f, 10.0f), 1.0f, 2);
+
+	performLayout();
 }
 
-void Viewer::LoadShaders()
+// Create and define the vertex array and add a number of vertex buffers
+void Viewer::CreateVertexBuffers()
 {
-	skyShader.init("Sky Shader", std::string((const char*)sky_vert, sky_vert_size), std::string((const char*)sky_frag, sky_frag_size));
-	terrainShader.init("Terrain Shader", std::string((const char*)terrain_vert, terrain_vert_size), std::string((const char*)terrain_frag, terrain_frag_size));
-}
+	/*** Begin of task 2.2.3 ***
+	Fill the positions-array and your color array with 12 rows, each
+	containing 4 entries, to define a tetrahedron. */
 
-GLuint CreateTexture(const unsigned char* fileData, size_t fileLength, bool repeat = true)
-{
-	GLuint textureName;
-	int textureWidth, textureHeight, textureChannels;
-	auto pixelData = stbi_load_from_memory(fileData, (int)fileLength, &textureWidth, &textureHeight, &textureChannels, 3);
-	textureName = 0;
-	stbi_image_free(pixelData);
-	return textureName;
-}
-
-void Viewer::CreateGeometry()
-{
-	//empty VAO for sky
-	emptyVAO.generate();
-
-	//terrain VAO	
-	terrainVAO.generate();
-	terrainVAO.bind();
-	
-	std::vector<Eigen::Vector4f> positions;
-	std::vector<uint32_t> indices;
-	
-	/*Generate positions and indices for a terrain patch with a
-	  single triangle strip */
-
-	terrainShader.bind();
-	terrainPositions.uploadData(positions).bindToAttribute("position");
-	terrainIndices.uploadData((uint32_t)indices.size() * sizeof(uint32_t), indices.data());
+	// Define 3 vertices for one face
+	GLfloat positions[] = {
+		0, 1, 0, 1,
+		-1, -1, 0, 1,
+		1, -1, 0, 1
+	};
 
 	
 
-	//textures
-	grassTexture = CreateTexture((unsigned char*)grass_jpg, grass_jpg_size);
-	rockTexture = CreateTexture((unsigned char*)rock_jpg, rock_jpg_size);
-	roadColorTexture = CreateTexture((unsigned char*)roadcolor_jpg, roadcolor_jpg_size);
-	roadNormalMap = CreateTexture((unsigned char*)roadnormals_jpg, roadnormals_jpg_size);
-	roadSpecularMap = CreateTexture((unsigned char*)roadspecular_jpg, roadspecular_jpg_size);
-	alphaMap = CreateTexture((unsigned char*)alpha_jpg, alpha_jpg_size, false);
+	
+
+	// Generate the vertex array 
+	glGenVertexArrays(1, &vertex_array_id);
+	glBindVertexArray(vertex_array_id);
+
+	// Generate a position buffer to be appended to the vertex array
+	glGenBuffers(1, &position_buffer_id);
+	// Bind the buffer for subsequent settings
+	glBindBuffer(GL_ARRAY_BUFFER, position_buffer_id);
+	// Supply the position data
+	glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
+	// The buffer shall now be linked to the shader attribute
+	// "in_position". First, get the location of this attribute in 
+	// the shader program
+	GLuint vid = glGetAttribLocation(program_id, "in_position");
+	
+	// Enable this vertex attribute array
+	glEnableVertexAttribArray(vid);
+	// Set the format of the data to match the type of "in_position"
+	glVertexAttribPointer(vid, 4, GL_FLOAT, GL_FALSE, 0, 0);
+
+	/*** Begin of task 2.2.2 (a) ***
+	Create another buffer that will store color information. This works nearly
+	similar to the code above that creates the position buffer. Store the buffer
+	id into the variable "color_buffer_id" and bind the color buffer to the
+	shader variable "in_color".
+
+
+	/*** End of task 2.2.2 (a) ***/
+	
+	
+
+	// Unbind the vertex array to leave OpenGL in a clean state
+	glBindVertexArray(0);
 }
 
-void Viewer::RenderSky()
+//Checks if the given shader has been compiled successfully. Otherwise, prints an
+//error message and throws an exception.
+//  shaderId - the id of the shader object
+//  name - a human readable name for the shader that is printed together with the error
+void CheckShaderCompileStatus(GLuint shaderId, std::string name)
 {
-	Eigen::Matrix4f skyView = view;
-	for (int i = 0; i < 3; ++i)
-		skyView.col(i).normalize();
-	skyView.col(3).head<3>().setZero();
-	Eigen::Matrix4f skyMvp = proj * skyView;
-	glDepthMask(GL_FALSE);
-	glEnable(GL_DEPTH_CLAMP);
-	emptyVAO.bind();
-	skyShader.bind();
-	skyShader.setUniform("mvp", skyMvp);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 6);
-	glDisable(GL_DEPTH_CLAMP);
-	glDepthMask(GL_TRUE);
+	GLint status;
+	glGetShaderiv(shaderId, GL_COMPILE_STATUS, &status);
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, backgroundFBO);
-	glBlitFramebuffer(0, 0, width(), height(), 0, 0, width(), height(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-}
-
-void CalculateViewFrustum(const Eigen::Matrix4f& mvp, Eigen::Vector4f* frustumPlanes, nse::math::BoundingBox<float, 3>& bbox)
-{
-	frustumPlanes[0] = (mvp.row(3) + mvp.row(0)).transpose();
-	frustumPlanes[1] = (mvp.row(3) - mvp.row(0)).transpose();
-	frustumPlanes[2] = (mvp.row(3) + mvp.row(1)).transpose();
-	frustumPlanes[3] = (mvp.row(3) - mvp.row(1)).transpose();
-	frustumPlanes[4] = (mvp.row(3) + mvp.row(2)).transpose();
-	frustumPlanes[5] = (mvp.row(3) - mvp.row(2)).transpose();
-
-	Eigen::Matrix4f invMvp = mvp.inverse();
-	bbox.reset();
-	for(int x = -1; x <= 1; x += 2)
-		for(int y = -1; y <= 1; y += 2)
-			for (int z = -1; z <= 1; z += 2)
+	if (status != GL_TRUE)
 	{
-		Eigen::Vector4f corner = invMvp * Eigen::Vector4f((float)x, (float)y, (float)z, 1);
-		corner /= corner.w();
-		bbox.expand(corner.head<3>());
+		char buffer[512];
+		std::cerr << "Error while compiling shader \"" << name << "\":" << std::endl;
+		glGetShaderInfoLog(shaderId, 512, nullptr, buffer);
+		std::cerr << "Error: " << std::endl << buffer << std::endl;
+		throw std::runtime_error("Shader compilation failed!");
 	}
 }
 
-bool IsBoxCompletelyBehindPlane(const Eigen::Vector3f& boxMin, const Eigen::Vector3f& boxMax, const Eigen::Vector4f& plane)
+// Read, Compile and link the shader codes to a shader program
+void Viewer::CreateShaders()
 {
-	return
-		plane.dot(Eigen::Vector4f(boxMin.x(), boxMin.y(), boxMin.z(), 1)) < 0 &&
-		plane.dot(Eigen::Vector4f(boxMin.x(), boxMin.y(), boxMax.z(), 1)) < 0 &&
-		plane.dot(Eigen::Vector4f(boxMin.x(), boxMax.y(), boxMin.z(), 1)) < 0 &&
-		plane.dot(Eigen::Vector4f(boxMin.x(), boxMax.y(), boxMin.z(), 1)) < 0 &&
-		plane.dot(Eigen::Vector4f(boxMax.x(), boxMin.y(), boxMin.z(), 1)) < 0 &&
-		plane.dot(Eigen::Vector4f(boxMax.x(), boxMin.y(), boxMax.z(), 1)) < 0 &&
-		plane.dot(Eigen::Vector4f(boxMax.x(), boxMax.y(), boxMin.z(), 1)) < 0 &&
-		plane.dot(Eigen::Vector4f(boxMax.x(), boxMax.y(), boxMin.z(), 1)) < 0;
+	std::string vs((char*)shader_vert, shader_vert_size);
+	const char *vertex_content = vs.c_str();
+
+	std::string fs((char*)shader_frag, shader_frag_size);
+	const char *fragment_content = fs.c_str();
+
+	/*** Begin of task 2.2.1 ***
+	Use the appropriate OpenGL commands to create a shader object for
+	the vertex shader, set the source code and let it compile. Store the
+	ID of this shader object in the variable "vertex_shader_id". Repeat
+	for the fragment shader. Store the ID in the variable "fragment_shader_id.
+	Finally, create a shader program with its handle stored in "program_id",
+	attach both shader objects and link them. For error checking, you can
+	use the method "CheckShaderCompileStatus()" after the call to glCompileShader().
+	*/
+	/*** End of task 2.2.1 ***/
 }
 
 void Viewer::drawContents()
 {
-	camera().ComputeCameraMatrices(view, proj);
+	Eigen::Vector2f juliaC(sldJuliaCX->value(), sldJuliaCY->value());
+	float juliaZoom = sldJuliaZoom->value();
 
-	Eigen::Matrix4f mvp = proj * view;
-	Eigen::Vector3f cameraPosition = view.inverse().col(3).head<3>();
-	int visiblePatches = 0;
+	//Get the transform matrices
+	camera().ComputeCameraMatrices(modelViewMatrix, projectionMatrix);
 
-	RenderSky();
+	// If has_faceculling is set then enable backface culling
+	// and disable it otherwise
+	if (chkHasFaceCulling->checked())
+		glEnable(GL_CULL_FACE);
+	else
+		glDisable(GL_CULL_FACE);
+
+	// If has_depthtesting is set then enable depth testing
+	// and disable it otherwise
+	if (chkHasDepthTesting->checked())
+		glEnable(GL_DEPTH_TEST);
+	else
+		glDisable(GL_DEPTH_TEST);
+
+	// Activate the shader program
+	glUseProgram(program_id);
+
+	/*** Begin of task 2.2.4 (b) ***
+	Set the shader variables for the modelview and projection matrix.
+	First, find the location of these variables using glGetUniformLocation and
+	then set them with the command glUniformMatrix4fv. 
+	*/
+
+	// Bind the vertex array 
+	glBindVertexArray(vertex_array_id);
+	// Draw the bound vertex array. Start at element 0 and draw 3 vertices
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	/*** End of task 2.2.4 (b) ***/
 	
-	//render terrain
-	glEnable(GL_DEPTH_TEST);
-	terrainVAO.bind();
-	terrainShader.bind();	
-	
-	terrainShader.setUniform("screenSize", Eigen::Vector2f(width(), height()), false);
-	terrainShader.setUniform("mvp", mvp);
-	terrainShader.setUniform("cameraPos", cameraPosition, false);
-	/* Task: Render the terrain */
-
-	
-
-	//Render text
-	nvgBeginFrame(mNVGContext, (float)width(), (float)height(), mPixelRatio);
-	std::string text = "Patches visible: " + std::to_string(visiblePatches);
-	nvgText(mNVGContext, 10, 20, text.c_str(), nullptr);
-	nvgEndFrame(mNVGContext);
+	// Unbind the vertex array
+	glBindVertexArray(0);
+	// Deactivate the shader program
+	glUseProgram(0);
 }
