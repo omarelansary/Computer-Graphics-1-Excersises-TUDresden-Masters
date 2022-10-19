@@ -5,6 +5,7 @@
 #include <iostream>
 #include <set>
 #include <unordered_map>
+#include <memory>
 #include "Valence.h"
 
 
