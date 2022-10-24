@@ -18,4 +18,5 @@ add_library(CG1Common STATIC
 	src/util/OpenMeshUtils.cpp
 
 	glsl.cpp)
-	
+
+target_compile_definitions(CG1Common PUBLIC _USE_MATH_DEFINES=1)

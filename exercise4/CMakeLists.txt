@@ -21,11 +21,12 @@ set(bin2c_cmdline
 
 include_directories( ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include )
 
-add_executable(Exercise3 MACOSX_BUNDLE
+add_executable(Exercise4 MACOSX_BUNDLE
 	glsl.cpp
 	textures.cpp
 	src/main.cpp
 	src/Viewer.cpp include/Viewer.h
 	${GLSL_FILES})
+target_compile_definitions(Exercise4 PUBLIC _USE_MATH_DEFINES=1)
 
-target_link_libraries(Exercise3 CG1Common ${LIBS})
+target_link_libraries(Exercise4 CG1Common ${LIBS})

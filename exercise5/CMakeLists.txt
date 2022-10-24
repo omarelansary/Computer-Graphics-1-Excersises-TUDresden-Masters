@@ -1,6 +1,6 @@
 include_directories( ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include )
 
-add_executable(Exercise4 MACOSX_BUNDLE
+add_executable(Exercise5 MACOSX_BUNDLE
 	src/main.cpp
 	src/Viewer.cpp include/Viewer.h
 	src/AABBTree.cpp include/AABBTree.h
@@ -13,4 +13,4 @@ add_executable(Exercise4 MACOSX_BUNDLE
 	src/GridTraverser.cpp include/GridTraverser.h
 	)
 
-target_link_libraries(Exercise4 CG1Common ${LIBS})
+target_link_libraries(Exercise5 CG1Common ${LIBS})
