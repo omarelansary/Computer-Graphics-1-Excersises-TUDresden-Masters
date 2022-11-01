@@ -20,7 +20,7 @@
 const uint32_t PATCH_SIZE = 256; //number of vertices along one side of the terrain patch
 
 Viewer::Viewer()
-	: AbstractViewer("CG1 Exercise 3"),
+	: AbstractViewer("CG1 Exercise 4"),
 	terrainPositions(nse::gui::VertexBuffer), terrainIndices(nse::gui::IndexBuffer),
 	offsetBuffer(nse::gui::VertexBuffer)
 {

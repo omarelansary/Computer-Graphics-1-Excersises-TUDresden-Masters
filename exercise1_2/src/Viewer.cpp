@@ -44,7 +44,7 @@ const float segmentColors[segmentColorCount][3] =
 };
 
 Viewer::Viewer()
-	: AbstractViewer("CG1 Exercise 1"),
+	: AbstractViewer("CG1 Exercise 1+2"),
 	renderer(polymesh)
 { 
 	SetupGUI();	

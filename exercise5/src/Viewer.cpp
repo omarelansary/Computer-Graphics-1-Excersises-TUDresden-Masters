@@ -23,7 +23,7 @@
 #include "GridTraverser.h"
 
 Viewer::Viewer()
-	: AbstractViewer("CG1 Exercise 4"),
+	: AbstractViewer("CG1 Exercise 5"),
 	renderer(polymesh),
 	closestPositions(nse::gui::VertexBuffer),
 	gridPositions(nse::gui::VertexBuffer),
