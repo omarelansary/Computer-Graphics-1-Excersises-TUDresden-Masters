@@ -83,7 +83,7 @@ ENDFUNCTION()
 
 FUNCTION(FinishBuildEnvironment)
 	# Inject compile options into 3rd party targets to try and get rid of as many warnings as possible
-	#- NanoGUI
+	# - NanoGUI
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 		# Common to both GCC and Clang
 		if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
@@ -93,8 +93,7 @@ FUNCTION(FinishBuildEnvironment)
 		# Special options depending on whether it's GCC or Clang
 		if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 			# Warnings generated all over the code base
-			target_compile_options(nanogui-obj PRIVATE -Wno-cast-function-type)
-
+			target_compile_options(nanogui-obj PRIVATE -Wno-maybe-uninitialized -Wno-format-truncation -Wno-cast-function-type -Wno-dangling-pointer)
 			# Warnings we need to remove surgically from certain files in order to prevent other warnings from appearing
 			set_source_files_properties("${NANOGUI_DIR}/src/button.cpp" TARGET_DIRECTORY nanogui-obj PROPERTIES COMPILE_FLAGS -Wno-deprecated-copy)
 			set_source_files_properties("${NANOGUI_DIR}/src/checkbox.cpp" TARGET_DIRECTORY nanogui-obj PROPERTIES COMPILE_FLAGS -Wno-deprecated-copy)
@@ -115,7 +114,7 @@ FUNCTION(FinishBuildEnvironment)
 			set_source_files_properties("${NANOGUI_DIR}/src/progressbar.cpp" TARGET_DIRECTORY nanogui-obj PROPERTIES COMPILE_FLAGS -Wno-deprecated-copy)
 			set_source_files_properties("${NANOGUI_DIR}/src/screen.cpp" TARGET_DIRECTORY nanogui-obj PROPERTIES COMPILE_FLAGS -Wno-deprecated-copy)
 			set_source_files_properties("${NANOGUI_DIR}/src/serializer.cpp" TARGET_DIRECTORY nanogui-obj PROPERTIES COMPILE_FLAGS -Wno-deprecated-copy)
-			set_source_files_properties("${NANOGUI_DIR}/src/slider.cpp" TARGET_DIRECTORY nanogui-obj PROPERTIES COMPILE_FLAGS -Wno-deprecated-copy)
+			set_source_files_properties("${NANOGUI_DIR}/src/slider.cpp" TARGET_DIRECTORY nanogui-obj PROPERTIES COMPILE_FLAGS "-Wno-deprecated-copy -Wno-mismatched-new-delete")
 			set_source_files_properties("${NANOGUI_DIR}/src/stackedwidget.cpp" TARGET_DIRECTORY nanogui-obj PROPERTIES COMPILE_FLAGS -Wno-deprecated-copy)
 			set_source_files_properties("${NANOGUI_DIR}/src/tabheader.cpp" TARGET_DIRECTORY nanogui-obj PROPERTIES COMPILE_FLAGS -Wno-deprecated-copy)
 			set_source_files_properties("${NANOGUI_DIR}/src/tabwidget.cpp" TARGET_DIRECTORY nanogui-obj PROPERTIES COMPILE_FLAGS -Wno-deprecated-copy)
@@ -124,7 +123,22 @@ FUNCTION(FinishBuildEnvironment)
 			set_source_files_properties("${NANOGUI_DIR}/src/window.cpp" TARGET_DIRECTORY nanogui-obj PROPERTIES COMPILE_FLAGS -Wno-deprecated-copy)
 			set_source_files_properties("${NANOGUI_DIR}/src/widget.cpp" TARGET_DIRECTORY nanogui-obj PROPERTIES COMPILE_FLAGS -Wno-deprecated-copy)
 		elseif(CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
-			target_compile_options(nanogui-obj PRIVATE -Wno-bad-function-cast)
+			target_compile_options(nanogui-obj PRIVATE -Wno-unknown-warning-option -Wno-bad-function-cast -Wno-deprecated-copy-with-user-provided-copy)
+		endif()
+	endif()
+	# - GLFW
+	if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+		target_compile_options(glfw_objects PRIVATE -Wno-format-truncation)
+	endif()
+	# - OpenMesh
+	if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+		target_compile_options(OpenMeshCore PRIVATE -Wno-unused-result -Wno-deprecated-copy)
+		if(TARGET OpenMeshCoreStatic)
+			target_compile_options(OpenMeshCoreStatic PRIVATE -Wno-unused-result -Wno-deprecated-copy)
+		endif()
+		target_compile_options(OpenMeshTools PRIVATE -Wno-deprecated-copy)
+		if(TARGET OpenMeshToolsStatic)
+			target_compile_options(OpenMeshToolsStatic PRIVATE -Wno-deprecated-copy)
 		endif()
 	endif()
 ENDFUNCTION()
