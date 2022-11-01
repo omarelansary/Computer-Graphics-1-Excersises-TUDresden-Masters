@@ -11,6 +11,10 @@ add_executable(Exercise1_2 MACOSX_BUNDLE
 	src/Smoothing.cpp include/Smoothing.h
 	src/Stripification.cpp include/Stripification.h
 	include/sample_set.h)
+
 target_compile_features(Exercise1_2 PUBLIC cxx_std_17)
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+	target_compile_definitions(Exercise1_2 PRIVATE _SILENCE_CXX17_RESULT_OF_DEPRECATION_WARNING=1)
+endif()
 target_compile_definitions(Exercise1_2 PUBLIC _USE_MATH_DEFINES=1)
 target_link_libraries(Exercise1_2 CG1Common ${LIBS})
