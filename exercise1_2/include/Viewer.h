@@ -34,6 +34,7 @@ private:
 	HEMesh polymesh;
 	MeshRenderer renderer;
 	OpenMesh::MPropHandleT<BBoxType> bboxProperty;
+	OpenMesh::MPropHandleT<float> avgEdgeLengthProperty;
 
 	OpenMesh::FPropHandleT<int> faceIdProperty;
 	OpenMesh::FPropHandleT<Eigen::Vector4f> faceColorProperty;

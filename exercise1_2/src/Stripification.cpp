@@ -21,7 +21,7 @@ unsigned int ExtractTriStrips(HEMesh& mesh, OpenMesh::FPropHandleT<int> perFaceS
 
 	int nStrips = 0;
 
-	/*Task 2.2.3*/
+	/*Task 2.2.2*/
 	
 	return nStrips;
 }

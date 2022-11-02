@@ -2,16 +2,22 @@
 // chair of the TU Dresden. Do not distribute! 
 // Copyright (C) CGV TU Dresden - All Rights Reserved
 
+#include <memory>
+#include <random>
 #include "Smoothing.h"
 
-#include <random>
 
-void SmoothUniformLaplacian(HEMesh& m, float lambda, unsigned int iterations)
+void SmoothUniformLaplacian (HEMesh &m, float lambda)
 {
-	/*Task 2.2.2*/
+	/*Task 2.2.3*/
 }
 
-void AddNoise(HEMesh& m, OpenMesh::MPropHandleT<Viewer::BBoxType> bbox_prop)
+void SmoothCotanLaplacian (HEMesh &m, float lambda)
+{
+	/*Task 2.2.3*/
+}
+
+void AddNoise (HEMesh &m, OpenMesh::MPropHandleT<Viewer::BBoxType> bbox_prop)
 {
 	std::mt19937 rnd;
 	std::normal_distribution<float> dist;

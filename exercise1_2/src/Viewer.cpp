@@ -50,6 +50,7 @@ Viewer::Viewer()
 	SetupGUI();	
 
 	polymesh.add_property(bboxProperty, "bbox");
+	polymesh.add_property(avgEdgeLengthProperty, "avgEdgeLen");
 	polymesh.add_property(faceIdProperty, "fid");
 	polymesh.add_property(faceColorProperty, "fcolor");
 	const auto valenceProps = AddValenceProperties(polymesh);
@@ -112,6 +113,30 @@ void Viewer::SetupGUI()
 	auto arrowBtn = new nanogui::Button(primitiveBtn->popup(), "Arrow");
 	arrowBtn->setCallback([this]() { CreateUnitArrow(polymesh); MeshUpdated(true); });
 
+	auto conicFanBtn = new nanogui::Button(primitiveBtn->popup(), "Conic Fan");
+	conicFanBtn->setCallback([this]() {
+		// ToDo: move into Primitives.cpp/.h after the end of the semester
+		/* CreateConicFan(HEMesh &mesh, float radius, float aspect) */ {
+			const float radius = 1.f, aspect = 1.f;
+			constexpr const unsigned slices = 7;
+			polymesh.clear();
+			std::vector<float> circleFracts = {.0f, .075f, .175f, .3f, .45f, .625f, .825f};
+			std::vector<OpenMesh::VertexHandle> vh; vh.reserve(slices+1);
+			vh.emplace_back(polymesh.add_vertex(OpenMesh::Vec3f(-radius/4.f, -radius/5.f, aspect*radius)));
+			for (int i=0; i<slices; i++)
+			{
+				const float angle = float(2.*M_PI)*circleFracts[i];
+				vh.emplace_back(polymesh.add_vertex(
+					OpenMesh::Vec3f(std::cos(angle)*radius, std::sin(angle)*radius, .0f ))
+				);
+			}
+			for (int i=0; i<slices; i++)
+				polymesh.add_face(vh[0], vh[1 + i%slices], vh[1 + (i+1)% slices]);
+		}
+
+		MeshUpdated(true);
+	});
+
 	auto calcAreaBtn = new nanogui::Button(mainWindow, "Calculate Mesh Area");
 	calcAreaBtn->setCallback([this]() {
 		auto area = ComputeSurfaceArea(polymesh);
@@ -124,15 +149,12 @@ void Viewer::SetupGUI()
 	auto calcVolBtn = new nanogui::Button(mainWindow, "Calculate Mesh Volume");
 	calcVolBtn->setCallback([this]() {
 		//Triangulate the mesh if it is not a triangle mesh
-		for (auto f : polymesh.faces())
+		for (auto f : polymesh.faces()) if (polymesh.valence(f) > 3)
 		{
-			if (polymesh.valence(f) > 3)
-			{
-				std::cout << "Triangulating mesh." << std::endl;
-				polymesh.triangulate();
-				MeshUpdated();
-				break;
-			}
+			std::cout << "Triangulating mesh." << std::endl;
+			polymesh.triangulate();
+			MeshUpdated();
+			break;
 		}
 		
 		auto vol = ComputeVolume(polymesh);
@@ -230,10 +252,30 @@ void Viewer::SetupGUI()
 	sldSmoothingStrength = nse::gui::AddLabeledSliderWithDefaultDisplay(mainWindow, "Smoothing Strength", std::make_pair(0.0f, 1.0f), 0.1f, 2);
 
 	
-	auto smoothBtn = new nanogui::Button(mainWindow, "Laplacian Smoothing");
-	smoothBtn->setCallback([this]() {
-		SmoothUniformLaplacian(polymesh, sldSmoothingStrength->value(), smoothingIterations);
+	auto smoothLBtn = new nanogui::Button(mainWindow, "Uniform Laplacian Smoothing");
+	smoothLBtn->setCallback([this]() {
+		for (unsigned i=0; i<smoothingIterations; i++)
+			SmoothUniformLaplacian(polymesh, sldSmoothingStrength->value());
 		MeshUpdated();
+	});
+
+	auto smoothLBBtn = new nanogui::Button(mainWindow, "Cotangent Laplacian Smoothing");
+	smoothLBBtn->setCallback([this]() {
+		//Triangulate the mesh if it is not a triangle mesh
+		for (auto f : polymesh.faces()) if (polymesh.valence(f) > 3)
+		{
+			std::cout << "Triangulating mesh." << std::endl;
+			polymesh.triangulate();
+			MeshUpdated();
+			break;
+		}
+		for (unsigned i=0; i<smoothingIterations; i++)
+		{
+			const float scale_sqr =
+				0.125f * polymesh.property(avgEdgeLengthProperty)*polymesh.property(avgEdgeLengthProperty);
+			SmoothCotanLaplacian(polymesh, scale_sqr*sldSmoothingStrength->value());
+			MeshUpdated();
+		}
 	});
 
 	nanogui::TextBox* txtStripificationTrials;
@@ -299,9 +341,16 @@ void Viewer::MeshUpdated(bool initNewMesh)
 
 		//calculate the bounding box of the mesh
 		nse::math::BoundingBox<float, 3> bbox;
-		for (auto v : polymesh.vertices())
+		for (const auto v : polymesh.vertices())
 			bbox.expand(ToEigenVector(polymesh.point(v)));
 		polymesh.property(bboxProperty) = bbox;
+
+		// calculate average edge length
+		polymesh.property(avgEdgeLengthProperty) = .0f;
+		for (const auto e : polymesh.edges())
+			polymesh.property(avgEdgeLengthProperty) +=
+				(polymesh.point(e.v1()) - polymesh.point(e.v0())).length();
+		polymesh.property(avgEdgeLengthProperty) /= polymesh.n_edges();
 		camera().FocusOnBBox(bbox);
 	}	
 

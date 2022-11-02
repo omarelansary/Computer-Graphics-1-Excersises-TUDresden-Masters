@@ -51,7 +51,7 @@ void Viewer::SetupGUI()
 // Create and define the vertex array and add a number of vertex buffers
 void Viewer::CreateVertexBuffers()
 {
-	/*** Begin of task 2.2.3 ***
+	/*** Begin of task 3.2.3 ***
 	Fill the positions-array and your color array with 12 rows, each
 	containing 4 entries, to define a tetrahedron. */
 
@@ -86,14 +86,14 @@ void Viewer::CreateVertexBuffers()
 	// Set the format of the data to match the type of "in_position"
 	glVertexAttribPointer(vid, 4, GL_FLOAT, GL_FALSE, 0, 0);
 
-	/*** Begin of task 2.2.2 (a) ***
+	/*** Begin of task 3.2.2 (a) ***
 	Create another buffer that will store color information. This works nearly
 	similar to the code above that creates the position buffer. Store the buffer
 	id into the variable "color_buffer_id" and bind the color buffer to the
 	shader variable "in_color".
 
 
-	/*** End of task 2.2.2 (a) ***/
+	/*** End of task 3.2.2 (a) ***/
 	
 	
 
@@ -129,7 +129,7 @@ void Viewer::CreateShaders()
 	std::string fs((char*)shader_frag, shader_frag_size);
 	const char *fragment_content = fs.c_str();
 
-	/*** Begin of task 2.2.1 ***
+	/*** Begin of task 3.2.1 ***
 	Use the appropriate OpenGL commands to create a shader object for
 	the vertex shader, set the source code and let it compile. Store the
 	ID of this shader object in the variable "vertex_shader_id". Repeat
@@ -138,7 +138,7 @@ void Viewer::CreateShaders()
 	attach both shader objects and link them. For error checking, you can
 	use the method "CheckShaderCompileStatus()" after the call to glCompileShader().
 	*/
-	/*** End of task 2.2.1 ***/
+	/*** End of task 3.2.1 ***/
 }
 
 void Viewer::drawContents()
@@ -166,7 +166,7 @@ void Viewer::drawContents()
 	// Activate the shader program
 	glUseProgram(program_id);
 
-	/*** Begin of task 2.2.4 (b) ***
+	/*** Begin of task 3.2.4 (b) ***
 	Set the shader variables for the modelview and projection matrix.
 	First, find the location of these variables using glGetUniformLocation and
 	then set them with the command glUniformMatrix4fv. 
@@ -177,7 +177,7 @@ void Viewer::drawContents()
 	// Draw the bound vertex array. Start at element 0 and draw 3 vertices
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
-	/*** End of task 2.2.4 (b) ***/
+	/*** End of task 3.2.4 (b) ***/
 	
 	// Unbind the vertex array
 	glBindVertexArray(0);
