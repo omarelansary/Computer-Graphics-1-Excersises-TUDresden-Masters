@@ -270,12 +270,8 @@ void Viewer::SetupGUI()
 			break;
 		}
 		for (unsigned i=0; i<smoothingIterations; i++)
-		{
-			const float scale_sqr =
-				0.125f * polymesh.property(avgEdgeLengthProperty)*polymesh.property(avgEdgeLengthProperty);
-			SmoothCotanLaplacian(polymesh, scale_sqr*sldSmoothingStrength->value());
-			MeshUpdated();
-		}
+			SmoothCotanLaplacian(polymesh, sldSmoothingStrength->value());
+		MeshUpdated();
 	});
 
 	nanogui::TextBox* txtStripificationTrials;
