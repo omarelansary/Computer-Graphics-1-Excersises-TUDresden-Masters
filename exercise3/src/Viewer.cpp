@@ -90,9 +90,9 @@ void Viewer::CreateVertexBuffers()
 	Create another buffer that will store color information. This works nearly
 	similar to the code above that creates the position buffer. Store the buffer
 	id into the variable "color_buffer_id" and bind the color buffer to the
-	shader variable "in_color".
-
-
+	shader variable "in_color". */
+	
+	
 	/*** End of task 3.2.2 (a) ***/
 	
 	
