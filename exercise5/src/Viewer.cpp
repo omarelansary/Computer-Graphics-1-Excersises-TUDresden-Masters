@@ -79,7 +79,7 @@ void Viewer::SetupGUI()
 	chkRenderGrid = new nanogui::CheckBox(mainWindow, "Render Non-Empty Grid Cells"); chkRenderGrid->setChecked(false);
 	chkRenderRay = new nanogui::CheckBox(mainWindow, "Render Ray"); chkRenderRay->setChecked(false);
 
-	shadingBtn = new nanogui::ComboBox(mainWindow, { "Smooth Shading", "Flat Shading" });
+	shadingBtn = new nanogui::ComboBox(mainWindow, { "Flat Shading", "Smooth Shading" });
 
 	performLayout();
 }
@@ -243,7 +243,7 @@ void Viewer::drawContents()
 		Eigen::Matrix4f mvp = proj * view;
 
 		if(chkRenderMesh->checked())
-			renderer.Render(view, proj, shadingBtn->selectedIndex() == 1);
+			renderer.Render(view, proj, shadingBtn->selectedIndex() == 0);
 
 		ShaderPool::Instance()->simpleShader.bind();
 		ShaderPool::Instance()->simpleShader.setUniform("mvp", mvp);

@@ -44,13 +44,13 @@ void GridTraverser::SetCellExtents(const Eigen::Vector3f& cellExtent)
 void GridTraverser::Init()
 {
 	current = PositionToCellIndex(orig, cellExtents);
-	/* Task 4.2.2 */
+	/* Task 5.2.2 */
 	//you can add some precalculation code here
 }
 
 void GridTraverser::operator++(int)
 {
-	/* Task 4.2.2 */
+	/* Task 5.2.2 */
 	//traverse one step along the ray
 	//update the cell index stored in attribute "current"
 }

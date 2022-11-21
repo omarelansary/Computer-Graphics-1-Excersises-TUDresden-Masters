@@ -20,8 +20,9 @@ public:
 	void drawContents();	
 	bool resizeEvent(const Eigen::Vector2i&);
 
-private:	
 
+private:
+	void ensureFBO();
 	void RenderSky();
 
 	Eigen::Matrix4f view, proj;
@@ -35,8 +36,7 @@ private:
 	nse::gui::GLBuffer terrainIndices;
 
 	GLuint grassTexture, rockTexture, roadColorTexture, roadNormalMap, roadSpecularMap, alphaMap;
+	GLuint backgroundFBO, backgroundTexture;
 
 	nse::gui::GLBuffer offsetBuffer;
-
-	GLuint backgroundFBO, backgroundTexture;
 };

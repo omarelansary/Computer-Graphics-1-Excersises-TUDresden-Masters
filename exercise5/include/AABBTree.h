@@ -397,7 +397,7 @@ public:
 		assert(IsCompleted());
 		if(root == nullptr)
 			return ResultEntry();
-		/* Task 4.2.1 */
+		/* Task 5.2.1 */
 		return ClosestPrimitiveLinearSearch(q);	
 	}
 

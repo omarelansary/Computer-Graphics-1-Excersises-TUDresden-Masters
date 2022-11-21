@@ -28,8 +28,9 @@ Viewer::Viewer()
 	CreateGeometry();
 	
 	//Create a texture and framebuffer for the background
-	glGenFramebuffers(1, &backgroundFBO);	
-	glGenTextures(1, &backgroundTexture);	
+	glGenFramebuffers(1, &backgroundFBO);
+	glGenTextures(1, &backgroundTexture);
+	ensureFBO();
 
 	//Align camera to view a reasonable part of the terrain
 	camera().SetSceneExtent(nse::math::BoundingBox<float, 3>(Eigen::Vector3f(0, 0, 0), Eigen::Vector3f(PATCH_SIZE - 1, 0, PATCH_SIZE - 1)));
@@ -42,16 +43,7 @@ Viewer::Viewer()
 bool Viewer::resizeEvent(const Eigen::Vector2i&)
 {
 	//Re-generate the texture and FBO for the background
-	glBindFramebuffer(GL_FRAMEBUFFER, backgroundFBO);
-	glBindTexture(GL_TEXTURE_2D, backgroundTexture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width(), height(), 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, backgroundTexture, 0);
-	auto fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (fboStatus != GL_FRAMEBUFFER_COMPLETE)
-		std::cout << "Warning: Background framebuffer is not complete: " << fboStatus << std::endl;
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+	ensureFBO();
 	return false;
 }
 
@@ -99,6 +91,20 @@ void Viewer::CreateGeometry()
 	roadNormalMap = CreateTexture((unsigned char*)roadnormals_jpg, roadnormals_jpg_size);
 	roadSpecularMap = CreateTexture((unsigned char*)roadspecular_jpg, roadspecular_jpg_size);
 	alphaMap = CreateTexture((unsigned char*)alpha_jpg, alpha_jpg_size, false);
+}
+
+void Viewer::ensureFBO()
+{
+	//Re-generate the texture and FBO for the background
+	glBindFramebuffer(GL_FRAMEBUFFER, backgroundFBO);
+	glBindTexture(GL_TEXTURE_2D, backgroundTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width(), height(), 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, backgroundTexture, 0);
+	auto fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (fboStatus != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "Warning: Background framebuffer is not complete: " << fboStatus << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void Viewer::RenderSky()
