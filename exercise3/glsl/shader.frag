@@ -11,14 +11,14 @@ out vec4 color;
 
 void main(void)
 {
-	color = fragment_color * 0.5 + vec4(0.5);
-
-	 /**** Begin of tasks ***
+	/**** Begin of tasks ***
 	 - 2.2.5
 	 Implement the pseudo-code for calculating the julia fractal at a point.
-	 To get the point you can declare a new "in" variable which contains the
-	 position and just use the X- and Y- value. 
+	 For this point you can just use the X- and Y-component of the fragment
+	 position in model space, which you can receive from the vertex shader
+	 via another "in" variable. */
 
-	 *** End of tasks ***/
-	
+	color = fragment_color;
+
+	/**** End of tasks ***/
 }
