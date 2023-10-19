@@ -3,9 +3,8 @@
 // Copyright (C) CGV TU Dresden - All Rights Reserved
 
 #pragma once
-
 #include "util/OpenMeshUtils.h"
 
 //Finds the connected components in the mesh. Writes the non-negative shell index into perFaceShellIndex
 //and returns the number of shells.
-unsigned int ExtractShells(HEMesh& m, OpenMesh::FPropHandleT<int> perFaceShellIndex);
+unsigned int ExtractShells (HEMesh &m, OpenMesh::FPropHandleT<int> perFaceShellIndex);

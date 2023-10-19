@@ -2,11 +2,13 @@
 // chair of the TU Dresden. Do not distribute! 
 // Copyright (C) CGV TU Dresden - All Rights Reserved
 
+#include <map>
+#include <queue>
+#include "util/UnionFind.h"
 #include "ShellExtraction.h"
 
-#include <queue>
 
-unsigned int ExtractShells(HEMesh& m, OpenMesh::FPropHandleT<int> perFaceShellIndex)
+unsigned int ExtractShells (HEMesh &m, OpenMesh::FPropHandleT<int> perFaceShellIndex)
 {
 	//reset the shell indices to -1 for every face
 	for (auto f : m.faces())
