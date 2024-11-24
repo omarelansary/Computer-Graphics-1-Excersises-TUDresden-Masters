@@ -54,7 +54,7 @@ Viewer::Viewer()
 	polymesh.add_property(faceIdProperty, "fid");
 	polymesh.add_property(faceColorProperty, "fcolor");
 	const auto valenceProps = AddValenceProperties(polymesh);
-	vertexVertexValenceProperty = valenceProps.vextexValences;
+	vertexVertexValenceProperty = valenceProps.vertexValences;
 	vertexFaceValenceProperty = valenceProps.faceValences;
 }
 

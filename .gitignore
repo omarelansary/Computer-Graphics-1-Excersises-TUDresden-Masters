@@ -1,2 +1,32 @@
 build*
 .vscode*
+
+
+# CMake temporary files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+
+# Compiled object files and binaries
+*.o
+*.obj
+*.so
+*.dll
+*.dylib
+*.exe
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# IDE and editor-specific files
+.idea/
+*.swp
+*.swo
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Dependency folders (if applicable)
+node_modules/

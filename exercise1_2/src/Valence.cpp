@@ -14,9 +14,15 @@ VertexValenceProperties AddValenceProperties (HEMesh &m)
 {
 	/* Task 1.2.3 */
 	/* Add your properties to the mesh and return their handles. */
-	std::cerr << "Adding the custom valence properties is not implemented." << std::endl;
-	
-	return VertexValenceProperties(); // <- return your added property handles inside a VertexValenceProperties container
+	// Create a VertexValenceProperties container to hold the property handles
+	VertexValenceProperties valenceProps;
+
+	// Add a property to store the number of faces connected to each vertex
+	m.add_property(valenceProps.faceValences, "face_valence");
+	m.add_property(valenceProps.vertexValences, "vertex_valence");
+
+	// Return the property handles inside a VertexValenceProperties container
+	return valenceProps;
 }
 
 // Compute a histogram for the given vertex valence property
@@ -25,17 +31,40 @@ ValenceHistogram ComputeValenceHistogram (const HEMesh &m, const VertexValencePr
 	ValenceHistogram ret;
 	/* Task 1.2.3 - create a histogram of vertex valences from the values stored in your
 	                custom mesh property. */
-	return ret;
+		// Compute a histogram for the given vertex valence propert
+		// Iterate over each vertex in the mesh
+		for (auto v : m.vertices())
+		{
+			// Get the valence (number of incident faces) of the vertex
+			int vertexValence = m.property(valence, v);
+
+			// Increment the count for this valence in the histogram
+			ret[vertexValence]++;
+		}
+
+		return ret;
 }
 
 // Computes the per-vertex face incidence count (aka. vertex face valences) for the given mesh,
 // using the indicated property to store the results
-void ComputeVertexFaceValences (HEMesh &m, const VertexValenceProperty valence)
+void ComputeVertexFaceValences(HEMesh& m, const VertexValenceProperty valence)
 {
-	/* Task 1.2.3 - compute number of incident faces for each vertex using only simple-mesh
-	                capabilities and store them in the given custom mesh property. */
-	std::cerr << "Face-based valence computation is not implemented." << std::endl;
+	// Loop through all vertices in the mesh
+	for (auto v : m.vertices())
+	{
+		int faceCount = 0; // Initialize a counter for incident faces
+
+		// Loop over all faces around this vertex
+		for (auto f : m.vf_range(v)) // vf_range(v) gives the incident faces of vertex v
+		{
+			faceCount++; // Increment the counter for each incident face
+		}
+
+		// Store the face count in the custom valence property for this vertex
+		m.property(valence, v) = faceCount;
+	}
 }
+
 
 // Computes the vertex valences for the given mesh, using the indicated property to store the results
 void ComputeVertexVertexValences (HEMesh &m, const VertexValenceProperty valence)
@@ -52,5 +81,18 @@ void ComputeVertexVertexValences (HEMesh &m, const VertexValenceProperty valence
 	           directly use the two above helper types SetOfVertices and VertexAdjacencyMap with smart
 	           handles also, if you decide to use the smart handle APIs.*/
 	
-	std::cerr << "Vertex-based valence computation is not implemented." << std::endl;
+	// Loop through all vertices in the mesh
+	for (auto v : m.vertices())
+	{
+		int vertexValence = 0;  // Initialize counter for adjacent vertices (1-ring)
+
+		// Iterate through all half-edges around the vertex
+		for (auto vh : m.vv_range(v))  // vv_range(v) gives all vertices adjacent to v
+		{
+			vertexValence++;  // Count each adjacent vertex
+		}
+
+		// Store the valence in the custom valence property
+		m.property(valence, v) = vertexValence;
+	}
 }
