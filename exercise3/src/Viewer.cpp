@@ -54,17 +54,54 @@ void Viewer::CreateVertexBuffers()
 	/*** Begin of task 3.2.3 ***
 	Fill the positions-array and your color array with 12 rows, each
 	containing 4 entries, to define a tetrahedron. */
-
-	// Define 3 vertices for one face
 	GLfloat positions[] = {
-		0, 1, 0, 1,
-		-1, -1, 0, 1,
-		1, -1, 0, 1
+		// Face 1: Apex (0, 1, 0), Base (-1, -1, -1), Base (1, -1, -1)
+		1.0f, 1.0f, 1.0f, 1.0f,
+		-1.0f, -1.0f, 1.0f, 1.0f,   // Apex
+		1.0f, -1.0f, -1.0f, 1.0f, // Base vertex 1
+
+		// Face 2: Apex (0, 1, 0), Base (1, -1, -1), Base (0, -1, 1)
+		-1.0f, -1.0f, 1.0f, 1.0f,   // Apex
+		1.0f, 1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f, -1.0f, 1.0f,  // Base vertex 2
+
+		// Face 3: Apex (0, 1, 0), Base (0, -1, 1), Base (-1, -1, -1)
+		-1.0f, 1.0f, -1.0f, 1.0f,
+		1.0f, -1.0f, -1.0f, 1.0f,
+		-1.0f, -1.0f, 1.0f, 1.0f,   // Apex
+
+		// Face 4: Base (-1, -1, -1), Base (1, -1, -1), Base (0, -1, 1)
+		1.0f, 1.0f, 1.0f, 1.0f, // Base vertex 1
+		1.0f, -1.0f, -1.0f, 1.0f    // Base vertex 3
+		- 1.0f, 1.0f, -1.0f, 1.0f,
 	};
 
-	
 
-	
+
+	// Define colors for each face (one color per face)
+	GLfloat colors[] = {
+		// Face 1 (Red)
+		1.0f, 0.0f, 0.0f, 1.0f, // Red
+		1.0f, 0.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 0.0f, 1.0f,
+
+		// Face 2 (Green)
+		0.0f, 1.0f, 0.0f, 1.0f, // Green
+		0.0f, 1.0f, 0.0f, 1.0f,
+		0.0f, 1.0f, 0.0f, 1.0f,
+
+		// Face 3 (Blue)
+		0.0f, 0.0f, 1.0f, 1.0f, // Blue
+		0.0f, 0.0f, 1.0f, 1.0f,
+		0.0f, 0.0f, 1.0f, 1.0f,
+
+		// Face 4 (Yellow)
+		1.0f, 1.0f, 0.0f, 1.0f, // Yellow
+		1.0f, 1.0f, 0.0f, 1.0f,
+		1.0f, 1.0f, 0.0f, 1.0f
+	};
+
+
 
 	// Generate the vertex array 
 	glGenVertexArrays(1, &vertex_array_id);
@@ -92,6 +129,23 @@ void Viewer::CreateVertexBuffers()
 	id into the variable "color_buffer_id" and bind the color buffer to the
 	shader variable "in_color". */
 	
+	// Generate a color buffer to be appended to the vertex array
+	glGenBuffers(1, &color_buffer_id);
+	// Bind the buffer for subsequent settings
+	glBindBuffer(GL_ARRAY_BUFFER, color_buffer_id);
+	// Supply the color data
+	glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+	// The buffer shall now be linked to the shader attribute
+	// "in_colors". First, get the location of this attribute in 
+	// the shader program
+	GLuint cid = glGetAttribLocation(program_id, "in_color");
+
+	// Enable this vertex attribute array
+	glEnableVertexAttribArray(cid);
+	// Set the format of the data to match the type of "in_position"
+	glVertexAttribPointer(cid, 4, GL_FLOAT, GL_FALSE, 0, 0);
+
+
 	
 	/*** End of task 3.2.2 (a) ***/
 	
@@ -123,23 +177,54 @@ void CheckShaderCompileStatus(GLuint shaderId, std::string name)
 // Read, Compile and link the shader codes to a shader program
 void Viewer::CreateShaders()
 {
+	// Convert shader source code to C-style strings
 	std::string vs((char*)shader_vert, shader_vert_size);
-	const char *vertex_content = vs.c_str();
+	const char* vertex_content = vs.c_str();
 
 	std::string fs((char*)shader_frag, shader_frag_size);
-	const char *fragment_content = fs.c_str();
+	const char* fragment_content = fs.c_str();
 
-	/*** Begin of task 3.2.1 ***
-	Use the appropriate OpenGL commands to create a shader object for
-	the vertex shader, set the source code and let it compile. Store the
-	ID of this shader object in the variable "vertex_shader_id". Repeat
-	for the fragment shader. Store the ID in the variable "fragment_shader_id.
-	Finally, create a shader program with its handle stored in "program_id",
-	attach both shader objects and link them. For error checking, you can
-	use the method "CheckShaderCompileStatus()" after the call to glCompileShader().
-	*/
+	/*** Begin of task 3.2.1 ***/
+
+	// 1. Create a vertex shader object
+	GLuint vertex_shader_id = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertex_shader_id, 1, &vertex_content, NULL); // Set source code
+	glCompileShader(vertex_shader_id);                          // Compile vertex shader
+	CheckShaderCompileStatus(vertex_shader_id, "Vertex Shader");                 // Check compilation status
+
+	// 2. Create a fragment shader object
+	GLuint fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragment_shader_id, 1, &fragment_content, NULL); // Set source code
+	glCompileShader(fragment_shader_id);                            // Compile fragment shader
+	CheckShaderCompileStatus(fragment_shader_id, "Fragment Shader");                   // Check compilation status
+
+	// 3. Create a shader program
+	GLuint program_id = glCreateProgram();
+
+	// Attach shaders to the program
+	glAttachShader(program_id, vertex_shader_id);
+	glAttachShader(program_id, fragment_shader_id);
+
+	// Link the program
+	glLinkProgram(program_id);
+
+	// Check for linking errors (optional, recommended)
+	GLint success;
+	glGetProgramiv(program_id, GL_LINK_STATUS, &success);
+	if (!success) {
+		GLchar infoLog[512];
+		glGetProgramInfoLog(program_id, 512, NULL, infoLog);
+		std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+	}
+
+	// 4. Store shader IDs (optional, depending on your setup)
+	this->vertex_shader_id = vertex_shader_id;
+	this->fragment_shader_id = fragment_shader_id;
+	this->program_id = program_id;
+
 	/*** End of task 3.2.1 ***/
 }
+
 
 void Viewer::drawContents()
 {
@@ -172,10 +257,18 @@ void Viewer::drawContents()
 	then set them with the command glUniformMatrix4fv. 
 	*/
 
+	GLint modelViewLoc = glGetUniformLocation(program_id, "modelViewMatrix");
+	GLint projectionLoc = glGetUniformLocation(program_id, "projectionMatrix");
+
+	// Upload the modelView and projection matrices to the GPU
+	glUniformMatrix4fv(modelViewLoc, 1, GL_TRUE, modelViewMatrix.data());
+	glUniformMatrix4fv(projectionLoc, 1, GL_TRUE, projectionMatrix.data());
+
+
 	// Bind the vertex array 
 	glBindVertexArray(vertex_array_id);
-	// Draw the bound vertex array. Start at element 0 and draw 3 vertices
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	// Draw the tetrahedron (12 vertices, 4 faces, 3 vertices per face)
+	glDrawArrays(GL_TRIANGLES, 0, 12);
 
 	/*** End of task 3.2.4 (b) ***/
 	
