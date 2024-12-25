@@ -55,25 +55,22 @@ void Viewer::CreateVertexBuffers()
 	Fill the positions-array and your color array with 12 rows, each
 	containing 4 entries, to define a tetrahedron. */
 	GLfloat positions[] = {
-		// Face 1: Apex (0, 1, 0), Base (-1, -1, -1), Base (1, -1, -1)
-		1.0f, 1.0f, 1.0f, 1.0f,
-		-1.0f, -1.0f, 1.0f, 1.0f,   // Apex
-		1.0f, -1.0f, -1.0f, 1.0f, // Base vertex 1
 
-		// Face 2: Apex (0, 1, 0), Base (1, -1, -1), Base (0, -1, 1)
-		-1.0f, -1.0f, 1.0f, 1.0f,   // Apex
-		1.0f, 1.0f, 1.0f, 1.0f,
-		-1.0f, 1.0f, -1.0f, 1.0f,  // Base vertex 2
+		1,1,1,1,
+		-1,1,-1,1,
+		-1,-1,1,1,
 
-		// Face 3: Apex (0, 1, 0), Base (0, -1, 1), Base (-1, -1, -1)
-		-1.0f, 1.0f, -1.0f, 1.0f,
-		1.0f, -1.0f, -1.0f, 1.0f,
-		-1.0f, -1.0f, 1.0f, 1.0f,   // Apex
+		1,1,1,1,
+		-1,-1,1,1,
+		1,-1,-1,1,
 
-		// Face 4: Base (-1, -1, -1), Base (1, -1, -1), Base (0, -1, 1)
-		1.0f, 1.0f, 1.0f, 1.0f, // Base vertex 1
-		1.0f, -1.0f, -1.0f, 1.0f    // Base vertex 3
-		- 1.0f, 1.0f, -1.0f, 1.0f,
+		1,1,1,1,
+		1,-1,-1,1,
+		-1,1,-1,1,
+
+		-1,1,-1,1,
+		1,-1,-1,1,
+		-1,-1,1,1,
 	};
 
 
@@ -261,8 +258,8 @@ void Viewer::drawContents()
 	GLint projectionLoc = glGetUniformLocation(program_id, "projectionMatrix");
 
 	// Upload the modelView and projection matrices to the GPU
-	glUniformMatrix4fv(modelViewLoc, 1, GL_TRUE, modelViewMatrix.data());
-	glUniformMatrix4fv(projectionLoc, 1, GL_TRUE, projectionMatrix.data());
+	glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, modelViewMatrix.data());
+	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, projectionMatrix.data());
 
 
 	// Bind the vertex array 
