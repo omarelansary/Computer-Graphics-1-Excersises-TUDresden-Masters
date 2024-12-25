@@ -78,6 +78,30 @@ void Viewer::CreateGeometry()
 	/*Generate positions and indices for a terrain patch with a
 	  single triangle strip */
 
+	  // Generate positions
+	for (int z = 0; z < PATCH_SIZE; ++z) {
+		for (int x = 0; x < PATCH_SIZE; ++x) {
+			positions.emplace_back(x , 0.0f, z , 1.0f);
+		}
+	}
+
+	// Generate indices for a triangle strip
+	for (int z = 0; z < PATCH_SIZE - 1; ++z) {
+		for (int x = 0; x < PATCH_SIZE; ++x) {
+			indices.push_back(z * PATCH_SIZE + x);        // Current row
+			indices.push_back((z + 1) * PATCH_SIZE + x);  // Next row
+		}
+		// Add degenerate triangles if not on the last strip 
+		// for this forloop size if indices will be 131068
+		if (z < PATCH_SIZE - 2) {
+			indices.push_back((z + 1) * PATCH_SIZE + (PATCH_SIZE - 1));
+			indices.push_back((z + 1) * PATCH_SIZE);
+		}
+	}
+
+	terrainPositions.bind();
+	terrainIndices.bind();
+
 	terrainShader.bind();
 	terrainPositions.uploadData(positions).bindToAttribute("position");
 	terrainIndices.uploadData((uint32_t)indices.size() * sizeof(uint32_t), indices.data());
@@ -175,14 +199,18 @@ void Viewer::drawContents()
 	//render terrain
 	glEnable(GL_DEPTH_TEST);
 	terrainVAO.bind();
-	terrainShader.bind();	
+	terrainShader.bind();
+
 	
 	terrainShader.setUniform("screenSize", Eigen::Vector2f(width(), height()), false);
 	terrainShader.setUniform("mvp", mvp);
 	terrainShader.setUniform("cameraPos", cameraPosition, false);
 	/* Task: Render the terrain */
 
-	
+
+	// Draw the terrain using the triangle strip
+	glDrawElements(GL_TRIANGLE_STRIP, terrainIndices.bufferSize(), GL_UNSIGNED_INT, 0);
+
 
 	//Render text
 	nvgBeginFrame(mNVGContext, (float)width(), (float)height(), mPixelRatio);
