@@ -4,7 +4,8 @@
 // Copyright (C) CGV TU Dresden - All Rights Reserved
 
 in vec4 position;
-
+out vec3 normal; // Pass the computed normal to the fragment shader
+out vec3 fragPosition; // Pass the vertex position to the fragment shader
 
 
 uniform mat4 mvp;
@@ -16,7 +17,28 @@ float getTerrainHeight(vec2 p);
 
 void main()
 {
-	gl_Position = mvp * position;
+	float delta = 0.1; // Small offset for finite differences
+	vec4 newPosition=position; //because position is read only
+	newPosition.y=getTerrainHeight(newPosition.xz);
+
+    vec3 p = newPosition.xyz;
+
+	// Calculate heights for neighboring vertices
+	float hL = getTerrainHeight(p.xz - vec2(delta, 0.0)); // Left
+	float hR = getTerrainHeight(p.xz + vec2(delta, 0.0)); // Right
+	float hD = getTerrainHeight(p.xz - vec2(0.0, delta)); // Down
+	float hU = getTerrainHeight(p.xz + vec2(0.0, delta)); // Up
+
+    // Compute surface normal using cross product
+    vec3 tangentX = vec3(2*delta, hR - hL,0);
+    vec3 tangentZ = vec3(0, hU - hD, 2*delta);
+    normal = normalize(cross(tangentX, tangentZ));
+
+    // Pass the position and normal to the fragment shader
+    fragPosition = newPosition.xyz;
+
+	// Transform vertex position to clip space
+	gl_Position = mvp * newPosition;
 }
 
 //source: https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83
