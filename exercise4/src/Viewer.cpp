@@ -144,7 +144,19 @@ void Viewer::CreateGeometry()
 	terrainPositions.uploadData(positions).bindToAttribute("position");
 	terrainIndices.uploadData((uint32_t)indices.size() * sizeof(uint32_t), indices.data());
 
+	// Set up the offset attribute for instanced rendering
+	offsetBuffer.bind();
+	std::vector<Eigen::Vector2f> offsets = { Eigen::Vector2f(0.0f, 0.0f) }; // Single offset for now
+	offsetBuffer.uploadData(offsets).bindToAttribute("offset");
 	
+	// Set the attribute divisor for instanced rendering
+	GLuint offsetAttrib = terrainShader.attrib("offset");
+	glEnableVertexAttribArray(offsetAttrib);
+	glVertexAttribPointer(offsetAttrib, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glVertexAttribDivisor(offsetAttrib, 1); // Set divisor to 1 for instanced rendering
+
+	// Unbind VAO
+	terrainVAO.unbind();
 
 	//textures
 	grassTexture = CreateTexture((unsigned char*)grass_jpg, grass_jpg_size);
@@ -224,7 +236,7 @@ bool IsBoxCompletelyBehindPlane(const Eigen::Vector3f& boxMin, const Eigen::Vect
 		plane.dot(Eigen::Vector4f(boxMax.x(), boxMax.y(), boxMin.z(), 1)) < 0;
 }
 
-void Viewer::drawContents()
+void Viewer::drawContents() 
 {
 	camera().ComputeCameraMatrices(view, proj);
 
@@ -233,13 +245,50 @@ void Viewer::drawContents()
 	int visiblePatches = 0;
 
 	RenderSky();
-	
-	//render terrain
+
+	// Step 1: Calculate the view frustum and its bounding box
+	Eigen::Vector4f frustumPlanes[6];
+	nse::math::BoundingBox<float, 3> frustumBBox;
+	CalculateViewFrustum(mvp, frustumPlanes, frustumBBox);
+
+	// Step 2: Determine visible patches
+	std::vector<Eigen::Vector2f> visibleOffsets;
+	int patchCount = 10; // Number of patches to check in each direction (adjust as needed)
+	for (int z = -patchCount; z <= patchCount; ++z) {
+		for (int x = -patchCount; x <= patchCount; ++x) {
+			// Calculate the offset for this patch
+			Eigen::Vector2f offset(x * (PATCH_SIZE - 1), z * (PATCH_SIZE - 1));
+
+			// Define the bounding box for this patch
+			Eigen::Vector3f patchMin(offset.x(), 0.0f, offset.y());
+			Eigen::Vector3f patchMax(offset.x() + (PATCH_SIZE - 1), 15.0f, offset.y() + (PATCH_SIZE - 1));
+
+			// Check if the patch is visible (not completely behind any frustum plane)
+			bool isVisible = true;
+			for (int i = 0; i < 6; ++i) {
+				if (IsBoxCompletelyBehindPlane(patchMin, patchMax, frustumPlanes[i])) {
+					isVisible = false;
+					break;
+				}
+			}
+
+			// If the patch is visible, add its offset to the list
+			if (isVisible) {
+				visibleOffsets.push_back(offset);
+			}
+		}
+	}
+
+	// Step 3: Update the offset buffer with visible patch offsets
+	offsetBuffer.bind();
+	offsetBuffer.uploadData(visibleOffsets);
+
+	// Step 4: Render the terrain using instanced rendering
 	glEnable(GL_DEPTH_TEST);
 	terrainVAO.bind();
 	terrainShader.bind();
 
-	
+
 	terrainShader.setUniform("screenSize", Eigen::Vector2f(width(), height()), false);
 	terrainShader.setUniform("mvp", mvp);
 	terrainShader.setUniform("cameraPos", cameraPosition, false);
@@ -256,7 +305,7 @@ void Viewer::drawContents()
 	//// Bind the grass texture
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, grassTexture);
-	
+
 	// Bind the rock texture (for steep slopes)
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, rockTexture);
@@ -276,11 +325,13 @@ void Viewer::drawContents()
 	glActiveTexture(GL_TEXTURE5);
 	glBindTexture(GL_TEXTURE_2D, roadSpecularMap);
 
-	// Draw the terrain using the triangle strip
-	glDrawElements(GL_TRIANGLE_STRIP, terrainIndices.bufferSize(), GL_UNSIGNED_INT, 0);
+	// Draw the terrain using instanced rendering
+	glDrawElementsInstanced(GL_TRIANGLE_STRIP, terrainIndices.bufferSize(), GL_UNSIGNED_INT, 0, visibleOffsets.size());
 
+	// Update the number of visible patches
+	visiblePatches = visibleOffsets.size();
 
-	//Render text
+	// Render text (number of visible patches)
 	nvgBeginFrame(mNVGContext, (float)width(), (float)height(), mPixelRatio);
 	std::string text = "Patches visible: " + std::to_string(visiblePatches);
 	nvgText(mNVGContext, 10, 20, text.c_str(), nullptr);

@@ -4,6 +4,7 @@
 // Copyright (C) CGV TU Dresden - All Rights Reserved
 
 in vec4 position;
+in vec4 offset;
 out vec3 normal; // Pass the computed normal to the fragment shader
 out vec3 tangent;      // Pass the tangent vector to the fragment shader
 out vec3 bitangent;    // Pass the bitangent vector to the fragment shader
@@ -21,6 +22,7 @@ void main()
 {
 	float delta = 0.1; // Small offset for finite differences
 	vec4 newPosition=position; //because position is read only
+	newPosition.xz += offset.xz; // Add the offset to the x and z coordinates
 	newPosition.y=getTerrainHeight(newPosition.xz);
 
     vec3 p = newPosition.xyz;
