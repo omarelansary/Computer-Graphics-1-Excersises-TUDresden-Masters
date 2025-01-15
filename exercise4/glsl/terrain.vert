@@ -5,6 +5,8 @@
 
 in vec4 position;
 out vec3 normal; // Pass the computed normal to the fragment shader
+out vec3 tangent;      // Pass the tangent vector to the fragment shader
+out vec3 bitangent;    // Pass the bitangent vector to the fragment shader
 out vec3 fragPosition; // Pass the vertex position to the fragment shader
 
 
@@ -33,6 +35,10 @@ void main()
     vec3 tangentX = vec3(2*delta, hR - hL,0);
     vec3 tangentZ = vec3(0, hU - hD, 2*delta);
     normal = normalize(cross(tangentX, tangentZ));
+
+	// Normalize tangent and bitangent vectors
+    tangent = normalize(tangentX);
+    bitangent = normalize(tangentZ);
 
     // Pass the position and normal to the fragment shader
     fragPosition = newPosition.xyz;

@@ -57,9 +57,47 @@ GLuint CreateTexture(const unsigned char* fileData, size_t fileLength, bool repe
 {
 	GLuint textureName;
 	int textureWidth, textureHeight, textureChannels;
+
+	// Load pixel data from the file
 	auto pixelData = stbi_load_from_memory(fileData, (int)fileLength, &textureWidth, &textureHeight, &textureChannels, 3);
-	textureName = 0;
+	if (!pixelData)
+	{
+		std::cerr << "Failed to load texture data!" << std::endl;
+		return 0; // Return 0 for failure
+	}
+
+	// Generate a texture object
+	glGenTextures(1, &textureName);
+	glBindTexture(GL_TEXTURE_2D, textureName);
+
+	// Upload the pixel data to the GPU
+	glTexImage2D(
+		GL_TEXTURE_2D,
+		0,                  // Mipmap level
+		GL_RGB,             // Internal format
+		textureWidth,       // Texture width
+		textureHeight,      // Texture height
+		0,                  // Border (must be 0)
+		GL_RGB,             // Format of the input data
+		GL_UNSIGNED_BYTE,   // Data type of the input data
+		pixelData           // Pointer to pixel data
+	);
+
+	// Set texture parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	// Generate mipmaps
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	// Unbind the texture
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Free the pixel data
 	stbi_image_free(pixelData);
+
 	return textureName;
 }
 
@@ -207,6 +245,36 @@ void Viewer::drawContents()
 	terrainShader.setUniform("cameraPos", cameraPosition, false);
 	/* Task: Render the terrain */
 
+	// Set the texture unit for the grass and rock textures using the GLShader uniform function
+	terrainShader.setUniform("grassTexture", 0);  // Texture unit 0 for grass
+	terrainShader.setUniform("rockTexture", 1);   // Texture unit 1 for rock  //
+	terrainShader.setUniform("roadColorTexture", 2);   // Texture unit 2 for road  //
+	terrainShader.setUniform("alphaMap", 3);   // Texture unit 2 for road  //
+	terrainShader.setUniform("roadNormalMap", 4);   // Texture unit 2 for road  //
+	terrainShader.setUniform("roadSpecularMap", 5);   // Texture unit 2 for road  //
+
+	//// Bind the grass texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, grassTexture);
+	
+	// Bind the rock texture (for steep slopes)
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, rockTexture);
+
+	// Bind the road texture (from alpha map and road color)
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, roadColorTexture);
+
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, alphaMap);
+
+	// Bind the road normal map (for normal mapping)
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, roadNormalMap);
+
+	// Bind the road specular map (for specular highlights)
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, roadSpecularMap);
 
 	// Draw the terrain using the triangle strip
 	glDrawElements(GL_TRIANGLE_STRIP, terrainIndices.bufferSize(), GL_UNSIGNED_INT, 0);
