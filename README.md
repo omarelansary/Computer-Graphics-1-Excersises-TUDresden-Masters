@@ -1,6 +1,7 @@
 # Computer Graphics 1 - Exercises
+This repository contains a collection of tasks completed as part of a Computer Graphics course. The tasks focus on various aspects of computer graphics using OpenMesh and OpenGL, including mesh processing, procedural terrain generation, and advanced rendering techniques. Below is a brief overview of the tasks and their objectives.
 
-This repository contains the source code and data sets for the CG1 exercises. To download and compile the project, you need to do the following steps:
+To download and compile the project, you need to do the following steps:
 
 1. Clone the project to your local computer
 2. Run CMake to generate a project file for your build platform. Alternatively, you can use a development environment that supports CMake natively and open the directory directly.
@@ -76,7 +77,7 @@ This part of the project focuses on mesh processing using OpenMesh.
   - **(b)** Implement cotangent discretization smoothing. Ensure the update rule applies correctly and that smoothing is not done in-place to prevent overwriting mesh information.
 
 **Video: Operations Implemented in Tasks 1 and 2**
-https://github.com/user-attachments/assets/e76f29e9-e6ef-42d6-b3ba-cb0425354b40
+![video](https://github.com/user-attachments/assets/e76f29e9-e6ef-42d6-b3ba-cb0425354b40)
 
 ---
 
@@ -111,7 +112,7 @@ This task involves loading and compiling shader programs, augmenting shaders to 
   2. In the fragment shader, use the passed color data.
 
   **Image: Triangle vertices colored red, blue, and green**
-   ![image](https://github.com/user-attachments/assets/5c8df946-8a79-452c-9887-106fbadde4c4)
+  ![image](https://github.com/user-attachments/assets/5c8df946-8a79-452c-9887-106fbadde4c4)
   
 
 ## 3.2.3 and 3.2.4 Implementing Transforms
@@ -129,7 +130,7 @@ This task involves loading and compiling shader programs, augmenting shaders to 
   2. Ensure the correct transformation of the tetrahedron in the scene.
 
   **Video: Tetrahedron with proper transformations visible and manipulable with the mouse**
-https://github.com/user-attachments/assets/f359a2eb-4bad-464f-b3ee-70c59b5bfedc
+  [!video](https://github.com/user-attachments/assets/f359a2eb-4bad-464f-b3ee-70c59b5bfedc)
 
  
 
@@ -141,7 +142,7 @@ https://github.com/user-attachments/assets/f359a2eb-4bad-464f-b3ee-70c59b5bfedc
   3. Pass untransformed vertex positions from the vertex shader to the fragment shader.
   
   **Iamge: Tetrahedron colored by the Julia Fractal pattern**
-https://github.com/user-attachments/assets/adb7afce-1d5e-4b6b-b5c3-740874cbf5b1
+  [!image](https://github.com/user-attachments/assets/adb7afce-1d5e-4b6b-b5c3-740874cbf5b1)
 
 
 
