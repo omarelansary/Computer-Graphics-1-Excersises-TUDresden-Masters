@@ -51,7 +51,7 @@ Create a tessellated flat square patch geometry using vertex and index buffers.
 ### Expected Output
 A flat gray plane appears in the scene.
 
-**Image Placeholder: Geometry for the Terrain**
+**Image: Geometry for the Terrain**
 ![4 2 1](https://github.com/user-attachments/assets/144539c9-2eb7-4ce7-a8b4-8ac69c94ec84)
 
 ---
@@ -67,7 +67,7 @@ Apply a repeating grass texture to the terrain.
 ### Expected Output
 A shaded terrain covered with a repeating grass texture.
 
-**Image Placeholder: Simple Grass Texture**
+**Image: Simple Grass Texture**
 ![4 2 3](https://github.com/user-attachments/assets/cd6eefcc-9aed-4e41-b3f3-ecbec74ae671)
 
 ---
@@ -84,7 +84,7 @@ Blend grass and rock textures based on terrain steepness.
 #### Expected Output
 Grass texture transitions to rock texture on steep slopes.
 
-**Image Placeholder: Grass to Rock Transition**
+**Image: Grass to Rock Transition**
 ![4 2 4_a](https://github.com/user-attachments/assets/a91a3a7b-268f-4c6e-af00-904613b61004)
 
 ---
@@ -113,7 +113,7 @@ Add localized specular highlights to the road using a specular map.
 #### Expected Output
 Shiny highlights on the road surface under lighting.
 
-**Image Placeholder: Specular Highlights & Roads with Alpha Map on Roads**
+**Image: Specular Highlights & Roads with Alpha Map on Roads**
 ![4 2 4_b_c](https://github.com/user-attachments/assets/a3571842-7319-4ef4-a47f-95f2c464fea6)
 
 ---
@@ -143,7 +143,7 @@ Optimize rendering by displaying only terrain patches visible to the camera.
 #### Expected Output
 An efficient, infinite terrain with only visible patches rendered.
 
-**Image Placeholder: Frustum Culling for Terrain & Instanced Terrain Rendering**
+**Image: Frustum Culling for Terrain & Instanced Terrain Rendering**
 ![4 2 5_a_b_1](https://github.com/user-attachments/assets/01818a79-458e-4dfc-97bc-414d62dddf92)
 ![4 2 5_a_b_2](https://github.com/user-attachments/assets/99136afa-61c3-4a89-ba9b-35ca9d337d59)
 ![4 2 5_a_b_3](https://github.com/user-attachments/assets/619b22a2-676b-4562-b5c5-1b19aabef7eb)
