@@ -391,15 +391,57 @@ public:
 		//student end
 	}
 	
-	//returns the closest primitive and its squared distance to the point q
+
+	// Returns the closest primitive and its squared distance to the point q
 	ResultEntry ClosestPrimitive(const Eigen::Vector3f& q) const
 	{
 		assert(IsCompleted());
-		if(root == nullptr)
+		if (root == nullptr)
 			return ResultEntry();
-		/* Task 5.2.1 */
-		return ClosestPrimitiveLinearSearch(q);	
+
+		std::priority_queue<SearchEntry> pq;
+		pq.emplace(root->GetBounds().SqrDistance(q), root);
+
+		ResultEntry best;
+
+		while (!pq.empty())
+		{
+			// Get the node with the closest bounding box
+			SearchEntry current = pq.top();
+			pq.pop();
+
+			// If the best distance is already smaller than the closest box, we can stop
+			if (current.sqrDistance >= best.sqrDistance)
+				break;
+
+			// If the node is a leaf, check all its primitives
+			if (current.node->IsLeaf())
+			{
+				const AABBLeafNode* leaf = static_cast<const AABBLeafNode*>(current.node);
+				for (auto it = leaf->begin(); it != leaf->end(); ++it)
+				{
+					float dist = it->SqrDistance(q);
+					if (dist < best.sqrDistance)
+					{
+						best.sqrDistance = dist;
+						best.prim = &(*it);
+					}
+				}
+			}
+			else
+			{
+				// If the node is a split node, push both children into the priority queue
+				const AABBSplitNode* split = static_cast<const AABBSplitNode*>(current.node);
+				if (split->Left())
+					pq.emplace(split->Left()->GetBounds().SqrDistance(q), split->Left());
+				if (split->Right())
+					pq.emplace(split->Right()->GetBounds().SqrDistance(q), split->Right());
+			}
+		}
+
+		return best;
 	}
+
 
 	//return the closest point position on the closest primitive in the tree with respect to the query point q
 	Eigen::Vector3f ClosestPoint(const Eigen::Vector3f& p) const

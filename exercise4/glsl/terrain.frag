@@ -28,7 +28,7 @@
 	{
 		vec4 color = materialColor;
 		vec3 h = normalize(dirToLight + directionToViewer);
-		color.xyz *= 0.9 * max(dot(normalizedNormal, dirToLight), 0) + 0.1;
+		color.xyz *= 0.9 * max(abs(dot(normalizedNormal, dirToLight)), 0) + 0.1;
 		color.xyz += specularIntensity * pow(max(dot(h, normalizedNormal), 0), 50);
 		return color;
 	}
@@ -94,10 +94,10 @@
 		// Set the final color of the fragment
 		float specularIntensity =  mix(0.5, roadSpecularIntensity, alpha); // Calculate the specular intensity for the final color
 		
-		color = vec4(finalColor, 1.0);
+		//color = vec4(finalNormal, 1.0);
 
 		//Calculate light
-		//color = calculateLighting(vec4(finalColor, 1.0), specularIntensity, finalNormal, dirToViewer);
+		color = calculateLighting(vec4(finalColor, 1.0), specularIntensity, finalNormal, dirToViewer);
 
 	
 	}
