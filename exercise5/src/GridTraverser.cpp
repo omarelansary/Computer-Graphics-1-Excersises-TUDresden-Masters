@@ -43,16 +43,45 @@ void GridTraverser::SetCellExtents(const Eigen::Vector3f& cellExtent)
 
 void GridTraverser::Init()
 {
-	current = PositionToCellIndex(orig, cellExtents);
-	/* Task 5.2.2 */
-	//you can add some precalculation code here
+    current = PositionToCellIndex(orig, cellExtents);
+
+    // Compute step direction for each axis (+1 or -1)
+    step.x() = (dir.x() >= 0) ? 1 : -1;
+    step.y() = (dir.y() >= 0) ? 1 : -1;
+    step.z() = (dir.z() >= 0) ? 1 : -1;
+
+    // Compute next cell boundary (tMax) and step size (tDelta)
+    Eigen::Vector3f nextBoundary = (current.cast<float>().cwiseProduct(cellExtents) +
+        step.cast<float>().cwiseMax(Eigen::Vector3f::Zero()).cwiseProduct(cellExtents));
+
+    tMax.x() = (dir.x() != 0) ? (nextBoundary.x() - orig.x()) / dir.x() : std::numeric_limits<float>::infinity();
+    tMax.y() = (dir.y() != 0) ? (nextBoundary.y() - orig.y()) / dir.y() : std::numeric_limits<float>::infinity();
+    tMax.z() = (dir.z() != 0) ? (nextBoundary.z() - orig.z()) / dir.z() : std::numeric_limits<float>::infinity();
+
+    tDelta.x() = (dir.x() != 0) ? std::abs(cellExtents.x() / dir.x()) : std::numeric_limits<float>::infinity();
+    tDelta.y() = (dir.y() != 0) ? std::abs(cellExtents.y() / dir.y()) : std::numeric_limits<float>::infinity();
+    tDelta.z() = (dir.z() != 0) ? std::abs(cellExtents.z() / dir.z()) : std::numeric_limits<float>::infinity();
 }
+
 
 void GridTraverser::operator++(int)
 {
-	/* Task 5.2.2 */
-	//traverse one step along the ray
-	//update the cell index stored in attribute "current"
+    // Traverse one step along the ray
+    if (tMax.x() < tMax.y() && tMax.x() < tMax.z())
+    {
+        current.x() += step.x();
+        tMax.x() += tDelta.x();
+    }
+    else if (tMax.y() < tMax.z())
+    {
+        current.y() += step.y();
+        tMax.y() += tDelta.y();
+    }
+    else
+    {
+        current.z() += step.z();
+        tMax.z() += tDelta.z();
+    }
 }
 
 Eigen::Vector3i GridTraverser::operator*()

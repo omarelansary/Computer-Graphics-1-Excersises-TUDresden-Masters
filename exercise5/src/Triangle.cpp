@@ -30,17 +30,96 @@ Box Triangle::ComputeBounds() const
 {
 	/* Task 5.2.2 */
 	Box b;		
+	b.Insert(v0);
+	b.Insert(v1);
+	b.Insert(v2);
 	return b;
 }
 
 
-//returns true if the triangle overlaps the given box b
+// Returns true if the triangle overlaps the given box b
 bool Triangle::Overlaps(const Box& b) const
 {
-	/* Task 5.2.2 */
-	//carefully look at the interface of the box class, there are a lot of useful helper functions
-	return true;	
+	// Get the triangle vertices
+	const Eigen::Vector3f& v0 = this->v0;
+	const Eigen::Vector3f& v1 = this->v1;
+	const Eigen::Vector3f& v2 = this->v2;
+
+	// Get the box's lower and upper bounds
+	const Eigen::Vector3f& boxMin = b.LowerBound();
+	const Eigen::Vector3f& boxMax = b.UpperBound();
+
+	// Helper function to project a point onto an axis
+	auto projectPoint = [](const Eigen::Vector3f& point, const Eigen::Vector3f& axis) {
+		return point.dot(axis);
+	};
+
+	// Helper function to project a triangle onto an axis
+	auto projectTriangle = [&](const Eigen::Vector3f& axis) {
+		float p0 = projectPoint(v0, axis);
+		float p1 = projectPoint(v1, axis);
+		float p2 = projectPoint(v2, axis);
+		return std::make_pair(std::min({ p0, p1, p2 }), std::max({ p0, p1, p2 }));
+	};
+
+	// Helper function to project the box onto an axis
+	auto projectBox = [&](const Eigen::Vector3f& axis) {
+		Eigen::Vector3f center = b.Center();
+		Eigen::Vector3f extents = b.HalfExtents();
+		float projection = projectPoint(center, axis);
+		float radius = extents[0] * std::abs(axis[0]) + extents[1] * std::abs(axis[1]) + extents[2] * std::abs(axis[2]);
+		return std::make_pair(projection - radius, projection + radius);
+	};
+
+	// Helper function to check if two intervals overlap
+	auto intervalsOverlap = [](const std::pair<float, float>& a, const std::pair<float, float>& b) {
+		return !(a.second < b.first || b.second < a.first);
+	};
+
+	// Test the 3 axes of the AABB
+	for (int i = 0; i < 3; ++i) {
+		Eigen::Vector3f axis = Eigen::Vector3f::Zero();
+		axis[i] = 1.0f;
+
+		auto triangleProjection = projectTriangle(axis);
+		auto boxProjection = projectBox(axis);
+
+		if (!intervalsOverlap(triangleProjection, boxProjection)) {
+			return false; // Separating axis found
+		}
+	}
+
+	// Test the triangle's normal
+	Eigen::Vector3f edge1 = v1 - v0;
+	Eigen::Vector3f edge2 = v2 - v0;
+	Eigen::Vector3f normal = edge1.cross(edge2).normalized();
+
+	auto triangleProjection = projectTriangle(normal);
+	auto boxProjection = projectBox(normal);
+
+	if (!intervalsOverlap(triangleProjection, boxProjection)) {
+		return false; // Separating axis found
+	}
+
+	// Test the 9 cross products of the triangle's edges and the AABB's axes
+	Eigen::Vector3f edges[3] = { v1 - v0, v2 - v1, v0 - v2 };
+	for (int i = 0; i < 3; ++i) {
+		for (int j = 0; j < 3; ++j) {
+			Eigen::Vector3f axis = edges[i].cross(Eigen::Vector3f::Unit(j)).normalized();
+
+			auto triangleProjection = projectTriangle(axis);
+			auto boxProjection = projectBox(axis);
+
+			if (!intervalsOverlap(triangleProjection, boxProjection)) {
+				return false; // Separating axis found
+			}
+		}
+	}
+
+	// No separating axis found, the triangle and the box overlap
+	return true;
 }
+
 //returns the barycentric coordinates of the point with the smallest distance to point p which lies on the triangle
 void Triangle::ClosestPointBarycentric(const Eigen::Vector3f& p, float& l0, float& l1, float& l2) const
 {

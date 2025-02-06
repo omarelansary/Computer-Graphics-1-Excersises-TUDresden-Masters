@@ -16,6 +16,11 @@ class GridTraverser
 	//current cell index
 	Eigen::Vector3i current;
 
+	Eigen::Vector3i step;      // Step direction (+1 or -1)
+	Eigen::Vector3f tMax;      // Next boundary crossings for x, y, z
+	Eigen::Vector3f tDelta;    // Step size along each axis
+
+
 	/* you can additional attributes for incremental calculation here */
 
 public:
